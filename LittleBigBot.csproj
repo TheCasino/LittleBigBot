@@ -17,7 +17,7 @@
     </ItemGroup>
 
     <Target Name="CopyNLogConfig" AfterTargets="AfterBuild">
-        <Copy SourceFiles="nlog-$(Configuration).config" DestinationFiles="$(OutDir)/nlog.config"/>
+        <Copy SourceFiles="nlog-$(Configuration).config" DestinationFiles="$(OutDir)/nlog.config" />
     </Target>
     
     <ItemGroup>
@@ -30,5 +30,9 @@
         <None Update="littlebigbot.ini">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <Folder Include="Common" />
     </ItemGroup>
 </Project>

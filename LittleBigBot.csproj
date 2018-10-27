@@ -10,6 +10,7 @@
       <PackageReference Include="LiteDB" Version="4.1.4" />
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.1" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="2.1.1" />
+      <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.1.1" />
       <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.1" />
       <PackageReference Include="NLog" Version="4.5.10" />
       <PackageReference Include="Qmmands" Version="1.0.3-nightly-00057" />

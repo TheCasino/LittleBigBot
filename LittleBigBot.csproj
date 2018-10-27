@@ -5,4 +5,19 @@
         <TargetFramework>netcoreapp2.1</TargetFramework>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Discord.Net.WebSocket" Version="2.0.0-beta2-01018" />
+      <PackageReference Include="LiteDB" Version="4.1.4" />
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="2.1.1" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Ini" Version="2.1.1" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="2.1.1" />
+      <PackageReference Include="NLog" Version="4.5.10" />
+      <PackageReference Include="Qmmands" Version="1.0.3-nightly-00057" />
+    </ItemGroup>
+    
+    <ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <None Update="littlebigbot.ini">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
 </Project>

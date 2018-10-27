@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using LittleBigBot.Common;
 using LittleBigBot.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -23,6 +24,7 @@ namespace LittleBigBot
 
             collection
                 .AddSingleton<DaemonService>()
+                .AddLogging(log => { log.AddLittleBig(); })
                 .AddSingleton(collection);
 
             return collection.BuildServiceProvider(true);

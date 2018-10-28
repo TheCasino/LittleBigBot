@@ -13,7 +13,7 @@ namespace LittleBigBot.Entities
 
             switch (type)
             {
-                case CooldownType.Guild:
+                case CooldownType.Server:
                     return context.Guild?.Id ?? context.Invoker.Id;
                 case CooldownType.Channel:
                     return context.Channel.Id;

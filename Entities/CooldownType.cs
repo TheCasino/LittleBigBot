@@ -2,7 +2,7 @@ namespace LittleBigBot.Entities
 {
     public enum CooldownType
     {
-        Guild,
+        Server,
         Channel,
         User
     }

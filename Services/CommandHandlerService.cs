@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -154,6 +155,20 @@ namespace LittleBigBot.Services
                         break;
                     case ExecutionFailedResult _:
                         return;
+                    case CommandOnCooldownResult cdr:
+                        command = cdr.Command;
+                        var msg = new StringBuilder();
+                        msg.AppendLine("This command is on cooldown!");
+                        foreach (var cdv in cdr.Cooldowns)
+                        {
+                            msg.AppendLine();
+                            msg.AppendLine($"**Cooldown type:** {cdv.Cooldown.BucketType.Cast<CooldownType>()}");
+                            msg.AppendLine($"**Limit:** {cdv.Cooldown.Amount} requests per {cdv.Cooldown.Per:g}");
+                            msg.AppendLine($"**Retry after:** {cdv.RetryAfter:g}");
+                        }
+
+                        await context.Channel.SendMessageAsync(msg.ToString());
+                        break;
                     default:
                         await context.Channel.SendMessageAsync($"Failed: {result}");
                         return;

@@ -60,7 +60,7 @@ namespace LittleBigBot
                 {
                     CaseSensitive = false,
                     DefaultRunMode = RunMode.Sequential,
-                    IgnoreExtraArguments = false,
+                    IgnoreExtraArguments = true,
                     CooldownBucketKeyGenerator = new LittleBigBotCooldownBucketKeyGenerator()
                 }))
                 .AddSingleton(new SpotifyService(new ClientCredentialsAuth

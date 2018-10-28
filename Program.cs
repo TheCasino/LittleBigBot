@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace LittleBigBot
+﻿namespace LittleBigBot
 {
     public class Program
     {

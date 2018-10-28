@@ -8,10 +8,8 @@ using NLogLevel = NLog.LogLevel;
 
 namespace LittleBigBot.Common
 {
-    public class LittleBigLogger: ILogger
+    public class LittleBigLogger : ILogger
     {
-        private readonly Logger _nlog;
-
         private static readonly Dictionary<MSLogLevel, NLogLevel> LogLevelMap = new Dictionary<MSLogLevel, NLogLevel>
         {
             [MSLogLevel.None] = NLogLevel.Off,
@@ -22,6 +20,8 @@ namespace LittleBigBot.Common
             [MSLogLevel.Error] = NLogLevel.Error,
             [MSLogLevel.Critical] = NLogLevel.Fatal // ??
         };
+
+        private readonly Logger _nlog;
 
         internal LittleBigLogger(string categoryName)
         {

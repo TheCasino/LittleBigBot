@@ -68,11 +68,14 @@ namespace LittleBigBot.Services
                 Fail();
             }
             else if (connect.IsCompletedSuccessfully)
+            {
                 _logger.LogDebug("Client reset successfully!");
-
+            }
         }
 
         private void Fail()
-            => Environment.Exit(1);
+        {
+            Environment.Exit(1);
+        }
     }
 }

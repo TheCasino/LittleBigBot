@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 
 namespace LittleBigBot.Common
 {
-    public class LittleBigLoggingProvider: ILoggerProvider
+    public class LittleBigLoggingProvider : ILoggerProvider
     {
         public void Dispose()
         {

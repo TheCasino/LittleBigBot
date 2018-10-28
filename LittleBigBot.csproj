@@ -20,13 +20,11 @@
         <PackageReference Include="Qmmands" Version="1.0.3-nightly-00057" />
         <PackageReference Include="SpotifyAPI-NET" Version="2.19.0" />
     </ItemGroup>
-
-    <Target Name="CopyNLogConfig" AfterTargets="AfterBuild">
-        <Copy SourceFiles="nlog-$(Configuration).config" DestinationFiles="$(OutDir)/nlog.config" />
-    </Target>
-
     <ItemGroup>
         <None Update="LittleBigBotDaemon.ps1">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="nlog.config">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
     </ItemGroup>

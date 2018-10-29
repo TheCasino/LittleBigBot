@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Reflection.Metadata.Ecma335;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Rest;
 using LittleBigBot.Results;
 using NLog;
-using Octokit;
 using Qmmands;
 
 namespace LittleBigBot.Entities

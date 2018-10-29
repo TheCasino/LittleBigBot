@@ -14,9 +14,10 @@ namespace LittleBigBot.Services
             return Task.CompletedTask;
         }
 
-        public Task ReloadAsync()
+        public async Task ReloadAsync()
         {
-            return Task.WhenAll(InitializeAsync(), DeinitializeAsync());
+            await DeinitializeAsync();
+            await InitializeAsync();
         }
     }
 }

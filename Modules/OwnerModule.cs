@@ -79,6 +79,7 @@ namespace LittleBigBot.Modules
             }
 
             [Command("Reload")]
+            [RunMode(RunMode.Parallel)]
             public async Task<BaseResult> ReloadServiceAsync([Name("The name of the service to reload."), Remainder] string name)
             {
                 var service = FindService(name);

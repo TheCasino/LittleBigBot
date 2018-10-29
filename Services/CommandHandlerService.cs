@@ -20,7 +20,7 @@ namespace LittleBigBot.Services
 {
     [Name("Command Handler")]
     [Description("Receives messages and attempts to parse them into commands to be executed.")]
-    public sealed class CommandHandlerService: BaseService
+    public sealed class CommandHandlerService : BaseService
     {
         public const string UnknownCommandReaction = "❓";
 
@@ -32,6 +32,9 @@ namespace LittleBigBot.Services
         private readonly ILogger<CommandHandlerService> _logger;
 
         private readonly IServiceProvider _services;
+
+        private readonly DiscordUserTypeParser<SocketGuildUser> _guildUserParser = new DiscordUserTypeParser<SocketGuildUser>();
+        private readonly DiscordUserTypeParser<SocketUser> _userParser = new DiscordUserTypeParser<SocketUser>();
 
         public int CommandFailures;
         public int CommandSuccesses;
@@ -51,15 +54,48 @@ namespace LittleBigBot.Services
         public override async Task InitializeAsync()
         {
             _client.MessageReceived += HandleMessageAsync;
-            _client.MessageUpdated += (cacheable, message, arg3) => HandleMessageAsync(message);
+            _client.MessageUpdated += HandleMessageUpdateAsync;
             _commandService.CommandErrored += HandleCommandErrorAsync;
             _commandService.CommandExecuted += HandleCommandExecutedAsync;
 
-            _commandService.AddTypeParser(new DiscordUserTypeParser<SocketGuildUser>());
-            _commandService.AddTypeParser(new DiscordUserTypeParser<SocketUser>());
+            _commandService.AddTypeParser(_guildUserParser);
+            _commandService.AddTypeParser(_userParser);
 
             var modulesLoaded = await _commandService.AddModulesAsync(Assembly.GetEntryAssembly());
             _logger.LogInformation($"{modulesLoaded.Count} total modules loaded | {modulesLoaded.Sum(a => a.Commands.Count)} total commands loaded | 2 type parsers loaded");
+        }
+
+        public override async Task DeinitializeAsync()
+        {
+            _client.MessageReceived -= HandleMessageAsync;
+            _client.MessageUpdated -= HandleMessageUpdateAsync;
+            _commandService.CommandErrored -= HandleCommandErrorAsync;
+            _commandService.CommandExecuted -= HandleCommandExecutedAsync;
+
+            _commandService.RemoveTypeParser(_guildUserParser);
+            _commandService.RemoveTypeParser(_userParser);
+
+            var modulesUnloaded = 0;
+
+            foreach (var module in _commandService.GetModules())
+            {
+                try
+                {
+                    await _commandService.RemoveModuleAsync(module).ConfigureAwait(false);
+                    modulesUnloaded++;
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            }
+
+            _logger.LogInformation($"CommandService unloaded - unloaded {modulesUnloaded} modules.");
+        }
+
+        private Task HandleMessageUpdateAsync(Cacheable<IMessage, ulong> cacheable, SocketMessage message, ISocketMessageChannel channel)
+        {
+            return HandleMessageAsync(message);
         }
 
         private async Task HandleCommandFinishedGlobalAsync(Command command, CommandResult result,

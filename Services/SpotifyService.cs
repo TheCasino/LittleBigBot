@@ -20,13 +20,16 @@ namespace LittleBigBot.Services
 
         public async Task<T> RequestAsync<T>(Func<SpotifyWebAPI, Task<T>> actor)
         {
-            if (CurrentToken != null && !CurrentToken.IsExpired()) return await actor(Api);
-            CurrentToken = await Credentials.DoAuthAsync();
-
-            Api.AccessToken = CurrentToken.AccessToken;
-            Api.TokenType = CurrentToken.TokenType;
-
+            await EnsureAuthenticatedAsync().ConfigureAwait(false);
             return await actor(Api);
+        }
+
+        public async Task EnsureAuthenticatedAsync()
+        {
+            if (CurrentToken != null && !CurrentToken.IsExpired()) return;
+            CurrentToken = await Credentials.DoAuthAsync().ConfigureAwait(false);
+            Api.TokenType = CurrentToken.TokenType;
+            Api.AccessToken = CurrentToken.AccessToken;
         }
     }
 }

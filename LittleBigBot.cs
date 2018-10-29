@@ -27,6 +27,7 @@ namespace LittleBigBot
         private readonly DiscordSocketClient _client;
         private readonly CommandHandlerService _commandHandler;
         private readonly ILogger _discordLogger;
+        private readonly SpotifyService _spotify;
 
         private readonly ILogger<LittleBigBot> _logger;
 
@@ -39,6 +40,7 @@ namespace LittleBigBot
             _appConfig = services.GetRequiredService<IOptions<LittleBigBotConfig>>().Value;
             _logger = services.GetRequiredService<ILogger<LittleBigBot>>();
             _discordLogger = services.GetRequiredService<ILoggerFactory>().CreateLogger("Discord");
+            _spotify = services.GetRequiredService<SpotifyService>();
         }
 
         public static Color DefaultEmbedColour => new Color(0xFFDBF4);
@@ -92,6 +94,7 @@ namespace LittleBigBot
             _logger.LogInformation("LittleBigBot client starting up!");
 
             await _commandHandler.InitialiseAsync().ConfigureAwait(false);
+            await _spotify.EnsureAuthenticatedAsync().ConfigureAwait(false);
             _client.Log += HandleLogAsync;
 
             _client.Ready += () => _client.SetGameAsync(_appConfig.LittleBigBot.PlayingStatus);

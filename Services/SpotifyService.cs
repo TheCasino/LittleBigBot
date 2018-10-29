@@ -1,12 +1,16 @@
 using System;
 using System.Threading.Tasks;
+using Qmmands;
 using SpotifyAPI.Web;
 using SpotifyAPI.Web.Auth;
 using SpotifyAPI.Web.Models;
 
 namespace LittleBigBot.Services
 {
-    public class SpotifyService
+    [Name("Spotify")]
+    [Description("Provides access to Spotify's API resources.")]
+    [DontAutoAdd]
+    public sealed class SpotifyService: BaseService
     {
         public SpotifyService(ClientCredentialsAuth auth, SpotifyWebAPI api)
         {

@@ -3,10 +3,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using Qmmands;
 
 namespace LittleBigBot.Services
 {
-    public sealed class ApiStatsService
+    [Name("API Stats")]
+    [Description("Provides statistical data about API requests and errors that have occurred in this shard.")]
+    public sealed class ApiStatsService: BaseService
     {
         public ApiStatsService(DiscordSocketClient client)
         {

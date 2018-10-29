@@ -4,10 +4,13 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using LittleBigBot.Entities;
+using Qmmands;
 
 namespace LittleBigBot.Services
 {
-    public class SpoilerService
+    [Name("Spoilers")]
+    [Description("Adds spoiler-creating functionality.")]
+    public sealed class SpoilerService: BaseService
     {
         private readonly DiscordSocketClient _client;
 

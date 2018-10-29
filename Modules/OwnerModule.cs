@@ -3,15 +3,18 @@ using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Net;
 using LittleBigBot.Checks;
+using LittleBigBot.Common;
 using LittleBigBot.Entities;
 using LittleBigBot.Results;
 using LittleBigBot.Services;
 using Microsoft.CodeAnalysis;
+using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using Octokit;
 using Qmmands;
@@ -27,6 +30,66 @@ namespace LittleBigBot.Modules
         public IServiceProvider Services { get; set; }
         public ApiStatsService ApiStats { get; set; }
         public CommandHandlerService Handler { get; set; }
+
+        [Group("Services")]
+        [Description("Provides commands to enable, disable, and reload LittleBigBot services.")]
+        public class ServicesSubmodule : LittleBigBotModuleBase
+        {
+            public IServiceProvider Services { get; set; }
+
+            public BaseService FindService(string name)
+            {
+                var matchingTypes = Assembly.GetEntryAssembly().GetTypes().Where(a =>
+                {
+                    if (typeof(BaseService).IsAssignableFrom(a) && !a.IsAbstract)
+                    {
+                        var serviceName = a.Name;
+                        var nameAttribute = a.GetCustomAttribute<NameAttribute>();
+                        if (nameAttribute != null) serviceName = nameAttribute.Name;
+                        return serviceName.Equals(name, StringComparison.OrdinalIgnoreCase);
+                    }
+
+                    return false;
+                }).ToList();
+
+                if (matchingTypes.Any())
+                {
+                    return Services.GetRequiredService(matchingTypes.First()) as BaseService;
+                }
+
+                return null;
+            }
+
+            [Command]
+            public Task<BaseResult> ServiceInfoAsync([Name("The name of the service to get information on."), Remainder]
+                string name)
+            {
+                var service = FindService(name);
+                if (service == null) return Task.FromResult<BaseResult>(NotFound($"Cannot find a service called ``{name}``."));
+                var type = service.GetType();
+                var serviceName = type.GetCustomAttribute<NameAttribute>()?.Name ?? type.Name;
+                var serviceDescription = type.GetCustomAttribute<DescriptionAttribute>()?.Description ?? "None.";
+
+                return Task.FromResult<BaseResult>(Ok(a =>
+                {
+                    a.WithAuthor($"Service: {serviceName}", Context.Bot.GetEffectiveAvatarUrl());
+                    a.WithDescription(serviceDescription);
+                    a.WithFooter($"LittleBigBot internal ID: {type.FullName}");
+                }));
+            }
+
+            [Command("Reload")]
+            public async Task<BaseResult> ReloadServiceAsync([Name("The name of the service to reload."), Remainder] string name)
+            {
+                var service = FindService(name);
+
+                if (service == null) return NotFound($"Cannot find a service called ``{name}``.");
+
+                await service.ReloadAsync().ConfigureAwait(false);
+
+                return Ok($"Reloaded service ``{service.GetType().Name}``.");
+            }
+        }
 
         [Command("ApiStats")]
         [Description("Views API statistics for the current session.")]

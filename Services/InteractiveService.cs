@@ -1,10 +1,13 @@
 using System;
 using System.Threading.Tasks;
 using Discord.WebSocket;
+using Qmmands;
 
 namespace LittleBigBot.Services
 {
-    public class InteractiveService
+    [Name("Interactive")]
+    [Description("Provides utility functions to help with creating interactive commands.")]
+    public class InteractiveService: BaseService
     {
         public InteractiveService(DiscordSocketClient client)
         {

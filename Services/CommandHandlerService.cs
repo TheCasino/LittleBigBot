@@ -18,7 +18,9 @@ using Qmmands;
 
 namespace LittleBigBot.Services
 {
-    public sealed class CommandHandlerService
+    [Name("Command Handler")]
+    [Description("Receives messages and attempts to parse them into commands to be executed.")]
+    public sealed class CommandHandlerService: BaseService
     {
         public const string UnknownCommandReaction = "❓";
 
@@ -46,7 +48,7 @@ namespace LittleBigBot.Services
             _commandsTracking = loggerFactory.CreateLogger("CommandsTracking");
         }
 
-        public async Task InitialiseAsync()
+        public override async Task InitializeAsync()
         {
             _client.MessageReceived += HandleMessageAsync;
             _client.MessageUpdated += (cacheable, message, arg3) => HandleMessageAsync(message);
@@ -65,14 +67,14 @@ namespace LittleBigBot.Services
         {
             if (result.IsSuccessful) CommandSuccesses++;
             else CommandFailures++;
-           
+
             var baseResult = result.Cast<BaseResult>();
 
             if (baseResult.Content != null && !string.IsNullOrWhiteSpace(baseResult.Content))
             {
                 await context.Channel.SendMessageAsync(baseResult.Content);
             }
-                        
+
             foreach (var embed in baseResult.Embeds)
             {
                 await context.Channel.SendMessageAsync(string.Empty, false, embed.Build());
@@ -130,7 +132,7 @@ namespace LittleBigBot.Services
             return
                 $"Executed command '{command.Aliases.First()}' for {context.Invoker} (ID {context.Invoker.Id}) in {context.Channel.Name} (ID {context.Channel.Id}){(context.Guild != null ? $" in guild {context.Guild.Name} (ID {context.Guild.Id})" : "")}";
         }
-        
+
         private void LogCommandSuccess(LittleBigBotExecutionContext context, Command command)
         {
             _commandsTracking.LogInformation(GenerateLogString(context, command) + " successfully");
@@ -166,7 +168,7 @@ namespace LittleBigBot.Services
                 var result = await _commandService.ExecuteAsync(message.Content.Substring(argPos) /* Remove prefix from string */, context, _services);
 
                 if (result.IsSuccessful) return;
-                
+
                 Command command;
 
                 switch (result)
@@ -208,11 +210,13 @@ namespace LittleBigBot.Services
 
                         await context.Channel.SendMessageAsync(msg.ToString());
                         break;
+                    case CommandResult _:
+                        return;
                     default:
                         await context.Channel.SendMessageAsync($"Generic failure: {result}");
                         return;
                 }
-                
+
                 LogCommandGeneralFailure(context, command, result as FailedResult);
             }
             catch (Exception)

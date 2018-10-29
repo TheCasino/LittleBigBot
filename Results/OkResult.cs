@@ -1,3 +1,4 @@
+using System.Linq;
 using Discord;
 
 namespace LittleBigBot.Results
@@ -6,8 +7,17 @@ namespace LittleBigBot.Results
     {
         public override bool IsSuccessful => true;
 
-        public OkResult(string content, params EmbedBuilder[] embed) : base(content, embed)
+        public OkResult(string content, params EmbedBuilder[] embed) : base(content, embed.Select(e =>
         {
+            if (e.Color == null)
+            {
+                e.Color = LittleBigBot.DefaultEmbedColour;
+            }
+
+            return e;
+        }).ToArray())
+        {
+
         }
     }
 }

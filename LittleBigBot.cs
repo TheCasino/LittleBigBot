@@ -1,5 +1,7 @@
 using System;
+using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
@@ -51,6 +53,14 @@ namespace LittleBigBot
             var webclient = new WebClient();
             webclient.Headers.Add("User-Agent", "LittleBigBot");
 
+            var baseServiceType = typeof(BaseService);
+            var serviceTypes = Assembly.GetEntryAssembly().GetTypes().Where(a => baseServiceType.IsAssignableFrom(a) && a.GetCustomAttribute<DontAutoAddAttribute>() == null && !a.IsAbstract);
+
+            foreach (var service in serviceTypes)
+            {
+                rootCollection.AddSingleton(service);
+            }
+
             return rootCollection
                 .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
                 {
@@ -75,12 +85,7 @@ namespace LittleBigBot
                     UseAuth = true
                 }))
                 .AddLogging(log => { log.AddProvider(new LittleBigLoggingProvider()); })
-                .AddSingleton<CommandHandlerService>()
-                .AddSingleton<SpoilerService>()
                 .AddTransient<Random>()
-                .AddSingleton<ScriptingService>()
-                .AddSingleton<InteractiveService>()
-                .AddSingleton<ApiStatsService>()
                 .AddSingleton(webclient)
                 .AddSingleton(new GitHubClient(new ProductHeaderValue(configuration.GetSection("GitHub")["Username"]), new InMemoryCredentialStore(new Credentials(configuration.GetSection("GitHub")["Token"]))))
                 .AddSingleton(configuration)
@@ -93,7 +98,7 @@ namespace LittleBigBot
         {
             _logger.LogInformation("LittleBigBot client starting up!");
 
-            await _commandHandler.InitialiseAsync().ConfigureAwait(false);
+            await _commandHandler.InitializeAsync().ConfigureAwait(false);
             await _spotify.EnsureAuthenticatedAsync().ConfigureAwait(false);
             _client.Log += HandleLogAsync;
 

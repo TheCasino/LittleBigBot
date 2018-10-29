@@ -4,10 +4,13 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
+using Qmmands;
 
 namespace LittleBigBot.Services
 {
-    public class DaemonService
+    [Name("Daemon")]
+    [Description("Manages the running and uptime of the bot.")]
+    public sealed class DaemonService: BaseService
     {
         private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
         private readonly DiscordSocketClient _discord;

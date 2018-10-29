@@ -9,6 +9,7 @@ using Humanizer;
 using LittleBigBot.Attributes;
 using LittleBigBot.Common;
 using LittleBigBot.Entities;
+using LittleBigBot.Results;
 using LittleBigBot.Services;
 using Qmmands;
 using SpotifyAPI.Web.Enums;
@@ -32,11 +33,9 @@ namespace LittleBigBot.Modules
         [Command("Track", "Song", "GetSong", "GetTrack")]
         [Description("Searches the Spotify database for a song.")]
         [RunMode(RunMode.Parallel)]
-        public async Task Command_TrackAsync([Name("Track Name")] [Description("The track to search for.")] [Remainder] [DefaultValueDescription("The track that you're currently listening to.")]
+        public async Task<BaseResult> Command_TrackAsync([Name("Track Name")] [Description("The track to search for.")] [Remainder] [DefaultValueDescription("The track that you're currently listening to.")]
             string trackQuery = null)
         {
-            var message = await ReplyAsync("Searching...");
-
             FullTrack track;
             if (trackQuery != null)
             {
@@ -44,8 +43,7 @@ namespace LittleBigBot.Modules
 
                 if (tracks.Error != null)
                 {
-                    await message.ModifyAsync(a => { a.Content = $"Spotify returned error code {tracks.Error.Status}: {tracks.Error.Message}"; });
-                    return;
+                    return BadRequest($"Spotify returned error code {tracks.Error.Status}: {tracks.Error.Message}");
                 }
 
                 track = tracks.Tracks.Items.FirstOrDefault();
@@ -54,8 +52,7 @@ namespace LittleBigBot.Modules
             {
                 if (!(Context.Invoker.Activity is SpotifyGame spot))
                 {
-                    await message.ModifyAsync(a => { a.Content = "You didn't supply a track, and you're not currently listening to anything!"; });
-                    return;
+                    return BadRequest("You didn't supply a track, and you're not currently listening to anything!");
                 }
 
                 track = await Spotify.RequestAsync(a => a.GetTrackAsync(spot.TrackId));
@@ -63,8 +60,7 @@ namespace LittleBigBot.Modules
 
             if (track == null)
             {
-                await message.ModifyAsync(a => { a.Content = "Cannot find a track by that name."; });
-                return;
+                return NotFound("Cannot find a track by that name.");
             }
 
             var embed = new EmbedBuilder
@@ -88,18 +84,15 @@ namespace LittleBigBot.Modules
             embed.AddField("Is Explicit", track.Explicit ? "Yes" : "No", true);
 
             embed.AddField("\u200B", UrlHelper.CreateMarkdownUrl("Click to listen!", track.GetTrackUrl()));
-            await message.ModifyAsync(a =>
-            {
-                a.Content = null;
-                a.Embed = embed.Build();
-            });
+            
+            return Ok(embed);
         }
 
         [Command("Spotify", "Listening", "Music", "SpotifyInfo", "MusicInfo", "Playing")]
         [Description("Retrieves information about a user's Spotify status, if any.")]
         [Thumbnail("https://i.imgur.com/d7HQlA9.png")]
         [RunMode(RunMode.Parallel)]
-        public async Task Command_GetSpotifyDataAsync(
+        public async Task<BaseResult> Command_GetSpotifyDataAsync(
             [Name("User")] [Description("The user to get Spotify data for.")] [DefaultValueDescription("The user who invoked this command.")] [Remainder]
             SocketUser user = null)
         {
@@ -107,8 +100,7 @@ namespace LittleBigBot.Modules
 
             if (user.Activity == null || !(user.Activity is SpotifyGame spotify))
             {
-                await ReplyAsync("User is not listening to anything.");
-                return;
+                return BadRequest("User is not listening to anything~!");
             }
 
             var track = await Spotify.RequestAsync(a => a.GetTrackAsync(spotify.TrackId));
@@ -149,23 +141,21 @@ namespace LittleBigBot.Modules
 
             if (spotify.Duration != null) embed.AddField("Duration", spotify.Duration.Value.Humanize(2), true);
 
-            await ReplyAsync(string.Empty, false, embed.Build());
+            return Ok(embed);
         }
 
         [Command("Album")]
         [Description("Searches the Spotify database for an album.")]
         [RunMode(RunMode.Parallel)]
-        public async Task Command_SearchAlbumAsync([Name("Album Name")] [Description("The album name to search for.")] [Remainder] [DefaultValueDescription("The album of the track you're currently listening to.")]
+        public async Task<BaseResult> Command_SearchAlbumAsync([Name("Album Name")] [Description("The album name to search for.")] [Remainder] [DefaultValueDescription("The album of the track you're currently listening to.")]
             string albumQuery = null)
         {
             FullAlbum album;
-            var message = await ReplyAsync("Searching...");
             if (albumQuery == null)
             {
                 if (!(Context.Invoker.Activity is SpotifyGame spot))
                 {
-                    await message.ModifyAsync(a => { a.Content = "You didn't supply an album name, and you're not currently listening to anything!"; });
-                    return;
+                    return BadRequest("You didn't supply an album name, and you're not currently listening to anything!");
                 }
 
                 album = await Spotify.RequestAsync(async ab => await ab.GetAlbumAsync((await Spotify.RequestAsync(a => a.GetTrackAsync(spot.TrackId))).Album.Id));
@@ -176,16 +166,14 @@ namespace LittleBigBot.Modules
 
                 if (result.Error != null)
                 {
-                    await message.ModifyAsync(a => { a.Content = $"Spotify returned error code {result.Error.Status}: {result.Error.Message}"; });
-                    return;
+                    return BadRequest($"Spotify returned error code {result.Error.Status}: {result.Error.Message}");
                 }
 
                 var sa0 = result.Albums.Items.FirstOrDefault();
 
                 if (sa0 == null)
                 {
-                    await message.ModifyAsync(a => { a.Content = "Cannot find album by that name."; });
-                    return;
+                    return BadRequest("Cannot find album by that name.");
                 }
 
                 album = await Spotify.RequestAsync(a => a.GetAlbumAsync(sa0.Id));
@@ -225,11 +213,7 @@ namespace LittleBigBot.Modules
 
             embed.AddField("Release Date", DateTime.TryParse(album.ReleaseDate, out var dt) ? dt.ToString("D") : album.ReleaseDate, true);
             if (album.Genres.Any()) embed.AddField("Genres", album.Genres.Humanize(), true);
-            await message.ModifyAsync(abc =>
-            {
-                abc.Content = null;
-                abc.Embed = embed.Build();
-            });
+            return Ok(embed);
         }
     }
 }

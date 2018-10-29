@@ -9,6 +9,7 @@ using Discord.WebSocket;
 using LittleBigBot.Attributes;
 using LittleBigBot.Common;
 using LittleBigBot.Entities;
+using LittleBigBot.Results;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Qmmands;
@@ -51,17 +52,16 @@ namespace LittleBigBot.Modules
 
         [Command("Prefix")]
         [Description("Shows you the current prefix.")]
-        public Task Command_ViewPrefixesAsync()
+        public Task<BaseResult> Command_ViewPrefixesAsync()
         {
-            return ReplyAsync($"The current prefix is ``{AppConfig.Value.LittleBigBot.Prefix}``.");
+            return Task.FromResult(Ok($"The current prefix is ``{AppConfig.Value.LittleBigBot.Prefix}``.") as BaseResult);
         }
 
         [Command("Help", "Commands")]
         [Description("Retrieves a list of commands that you can use.")]
         [Remarks("Use `command <command name>` to see help on a specific command, or `module <module name>` for help on a specific module.")]
-        public async Task Command_ListCommandsAsync()
+        public async Task<BaseResult> Command_ListCommandsAsync()
         {
-            var message = await ReplyAsync("Working...");
             var sb = new StringBuilder();
             sb
                 .AppendLine("**__LittleBigBot Commands__**")
@@ -89,7 +89,7 @@ namespace LittleBigBot.Modules
 
             await AppendModules(CommandService.GetModules(), null);
 
-            await message.ModifyAsync(a => a.Content = sb.ToString());
+            return Ok(sb.ToString());
         }
 
         private async Task<bool> CanShowCommandAsync(Command command)
@@ -107,13 +107,12 @@ namespace LittleBigBot.Modules
         [Command("Module", "ModuleInfo", "MInfo", "M")]
         [Description("Displays information about a LittleBigBot module.")]
         [Remarks("You can use the 'Help <command>' command for more information about a specific command.")]
-        public async Task Command_GetModuleInfoAsync([Remainder] string query)
+        public async Task<BaseResult> Command_GetModuleInfoAsync([Remainder] string query)
         {
             var module = CommandService.GetModules().Search(query.Replace("\"", ""));
             if (module == null)
             {
-                await ReplyAsync("No command or module found for `" + query + "`.");
-                return;
+                return NotFound($"No module found for `{query}`.");
             }
 
             var embed = new EmbedBuilder {Timestamp = DateTimeOffset.Now, Color = LittleBigBot.DefaultEmbedColour, Title = $"Module '{module.Name}'"};
@@ -126,7 +125,7 @@ namespace LittleBigBot.Modules
 
             embed.AddField("Commands", commands.Any() ? string.Join(", ", commands.Select(a => a.Aliases.FirstOrDefault())) + " (" + commands.Count + ")" : "None (all hidden)");
 
-            await ReplyAsync(string.Empty, false, embed.Build());
+            return Ok(embed);
         }
 
         public static Embed CreateCommandEmbed(Command command, LittleBigBotExecutionContext context)
@@ -160,16 +159,16 @@ namespace LittleBigBot.Modules
         [Command("Help", "CommandInfo", "CInfo", "C")]
         [Description("Displays information about a LittleBigBot command.")]
         [Remarks("You can use the 'Module' command for more information about a specific module.")]
-        public async Task Command_GetCommandInfoAsync([Remainder] string query)
+        public async Task<BaseResult> Command_GetCommandInfoAsync([Remainder] string query)
         {
             var search = CommandService.FindCommands(query).ToList();
             if (!search.Any())
             {
-                await ReplyAsync("No command found for `" + query + "`.");
-                return;
+                return NotFound($"No command found for `{query}`.");
             }
 
-            foreach (var match in search.Where(c => !c.Command.HasAttribute<HiddenAttribute>())) await ReplyAsync(string.Empty, false, CreateCommandEmbed(match.Command, Context));
+            return Ok(search.Where(c => !c.Command.HasAttribute<HiddenAttribute>())
+                .Select(a => CreateCommandEmbed(a.Command, Context).ToEmbedBuilder()).ToArray());
         }
 
         private static string FormatParameter(Parameter parameterInfo)

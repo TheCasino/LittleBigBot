@@ -4,6 +4,7 @@ using Discord;
 using LittleBigBot.Attributes;
 using LittleBigBot.Common;
 using LittleBigBot.Entities;
+using LittleBigBot.Results;
 using Microsoft.Extensions.Options;
 using Octokit;
 using Qmmands;
@@ -32,11 +33,9 @@ namespace LittleBigBot.Modules
         [Command("GHUser", "GitHubUser")]
         [RunMode(RunMode.Parallel)]
         [Cooldown(1, 3, CooldownMeasure.Seconds, CooldownType.User)]
-        public async Task Command_GetGHUserAsync([Name("Username")] [Description("The username of the user to view.")]
+        public async Task<BaseResult> Command_GetGHUserAsync([Name("Username")] [Description("The username of the user to view.")]
             string username)
         {
-            var message = await ReplyAsync("Working...");
-
             try
             {
                 var user = await GHClient.User.Get(username);
@@ -60,16 +59,11 @@ namespace LittleBigBot.Modules
                 if (!string.IsNullOrWhiteSpace(user.Location)) embed.AddField("Location", user.Location, true);
                 if (user.DiskUsage != null) embed.AddField("Disk Usage", user.DiskUsage + "mb", true);
 
-
-                await message.ModifyAsync(a =>
-                {
-                    a.Content = null;
-                    a.Embed = embed.Build();
-                });
+                return Ok(embed);
             }
             catch (NotFoundException)
             {
-                await message.ModifyAsync(a => { a.Content = "User not found."; });
+                return NotFound("User not found.");
             }
         }
 
@@ -77,11 +71,9 @@ namespace LittleBigBot.Modules
         [RunMode(RunMode.Parallel)]
         [Description("Views a GitHub repository.")]
         [Cooldown(1, 3, CooldownMeasure.Seconds, CooldownType.User)]
-        public async Task Command_GetGitHubRepoAsync([Name("Repo ID")] [Description("The repo ID of the repository to view.")]
+        public async Task<BaseResult> Command_GetGitHubRepoAsync([Name("Repo ID")] [Description("The repo ID of the repository to view.")]
             string repoLink = GitHubRepoOwner + "/" + GitHubRepoName)
         {
-            var message = await ReplyAsync("Working...");
-
             var repoLinkParts = repoLink.Split("/");
 
             var repoOwner = repoLinkParts.FirstOrDefault();
@@ -89,8 +81,7 @@ namespace LittleBigBot.Modules
 
             if (string.IsNullOrWhiteSpace(repoOwner) || string.IsNullOrWhiteSpace(repoName))
             {
-                await message.ModifyAsync(me => me.Content = "Invalid repository owner or name.");
-                return;
+                return BadRequest("Invalid repository owner or name.");
             }
 
             try
@@ -114,16 +105,12 @@ namespace LittleBigBot.Modules
                 embed.AddField("Subscribers", repo.SubscribersCount, true);
                 embed.AddField("Created", repo.CreatedAt.ToUniversalTime().ToString("R"), true);
                 if (repo.PushedAt != null) embed.AddField("Last Push", repo.PushedAt?.ToUniversalTime().ToString("R"), true);
-
-                await message.ModifyAsync(m =>
-                {
-                    m.Content = null;
-                    m.Embed = embed.Build();
-                });
+                
+                return Ok(embed);
             }
             catch (NotFoundException)
             {
-                await message.ModifyAsync(me => me.Content = "Repository not found.");
+                return NotFound("Repository not found.");
             }
         }
 
@@ -131,17 +118,14 @@ namespace LittleBigBot.Modules
         [RunMode(RunMode.Parallel)]
         [Description("Views all updates on the GH repo, or gets a commit by ID.")]
         [Cooldown(1, 3, CooldownMeasure.Seconds, CooldownType.User)]
-        public async Task Command_GetUpdateAsync([Name("Repo")] [Description("The repository to use.")]
+        public async Task<BaseResult> Command_GetUpdateAsync([Name("Repo")] [Description("The repository to use.")]
             string repo = GitHubRepoOwner + "/" + GitHubRepoName, [Name("Commit ID")] [Description("The ID of the commit to get.")] [DefaultValueDescription("Views the last three commits.")]
             string updateId = null)
         {
-            var message = await ReplyAsync("Working...");
-
             var repoParts = repo.Split("/");
             if (repoParts.Length != 2)
             {
-                await message.ModifyAsync(a => { a.Content = "Invalid repository."; });
-                return;
+                return BadRequest("Invalid repository.");
             }
 
             var repoAuthor = repoParts.FirstOrDefault();
@@ -157,8 +141,7 @@ namespace LittleBigBot.Modules
 
                     if (commit == null)
                     {
-                        await message.ModifyAsync(ab => ab.Content = $"Cannot find commit {updateId}.");
-                        return;
+                        return BadRequest($"Cannot find commit {updateId}.");
                     }
 
                     var commitEmbed = new EmbedBuilder();
@@ -175,12 +158,7 @@ namespace LittleBigBot.Modules
                     commitEmbed.AddField("Additions", commit.Stats.Additions, true);
                     commitEmbed.AddField("Deletions", commit.Stats.Deletions, true);
                     commitEmbed.AddField("Parent", commit.Parents.First().Sha);
-                    await message.ModifyAsync(ab =>
-                    {
-                        ab.Content = null;
-                        ab.Embed = commitEmbed.Build();
-                    });
-                    return;
+                    return Ok(commitEmbed);
                 }
 
                 var commits = await Task.WhenAll((await GHClient.Repository.Commit.GetAll(repoAuthor, repoName)).Take(3).Select(a => GHClient.Repository.Commit.Get(repoAuthor, repoName, a.Sha)));
@@ -189,19 +167,16 @@ namespace LittleBigBot.Modules
                 embed.WithColor(LittleBigBot.DefaultEmbedColour);
                 embed.WithAuthor(a => a.WithIconUrl(Context.Client.CurrentUser.GetEffectiveAvatarUrl()).WithName("Recent Updates"));
                 embed.WithDescription(string.Join("\n", commits.Select(FormatCommit)));
-                await message.ModifyAsync(msg =>
-                {
-                    msg.Content = null;
-                    msg.Embed = embed.Build();
-                });
+                
+                return Ok(embed);
             }
             catch (RateLimitExceededException)
             {
-                await message.ModifyAsync(a => a.Content = "Ratelimited! Please try again later.");
+                return BadRequest("Rate limited! Please try again later.");
             }
             catch (NotFoundException)
             {
-                await message.ModifyAsync(a => a.Content = "Cannot find that repository.");
+                return NotFound("Cannot find that repository.");
             }
         }
 

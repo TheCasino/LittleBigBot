@@ -7,6 +7,7 @@ using Discord.WebSocket;
 using LittleBigBot.Attributes;
 using LittleBigBot.Common;
 using LittleBigBot.Entities;
+using LittleBigBot.Results;
 using Qmmands;
 
 /**
@@ -32,14 +33,13 @@ namespace LittleBigBot.Modules
 
         [Command("OTP", "Ship")]
         [Description("Ships two random members of this server/DM.")]
-        public async Task Command_OtpAsync(
+        public async Task<BaseResult> Command_OtpAsync(
             [ParameterArrayOptional] [Name("Blocked Users")] [Description("Users who will be skipped in the random selection.")]
             params SocketUser[] users)
         {
             if (Context.IsPrivate)
             {
-                await ReplyAsync($":heart: I ship **you** x **me**, {Context.Invoker.Username}! :heart:");
-                return;
+                return Ok($":heart: I ship **you** x **me**, {Context.Invoker.Username}! :heart:");
             }
 
             var arr = users.ToList();
@@ -48,8 +48,7 @@ namespace LittleBigBot.Modules
 
             if (socketGuildUsers.Length < 2)
             {
-                await ReplyAsync("This guild is too small, or you have ignored too many people!");
-                return;
+                return Ok("This guild is too small, or you have ignored too many people!");
             }
 
             SocketGuildUser GetRandomUser()
@@ -63,94 +62,88 @@ namespace LittleBigBot.Modules
 
             while (member1 == member2) member1 = GetRandomUser();
 
-            await ReplyAsync(
+            return Ok(
                 $":heart: I ship **{member1.Nickname ?? member1.Username}** x **{member2.Nickname ?? member2.Username}**! :heart:");
         }
 
         [Command("Roll", "Dice", "RollDice")]
         [Remarks("This command also supports complex dice types, like `d20+d18+4`.")]
         [Description("Rolls a dice of the supplied size.")]
-        public async Task Command_DiceRollAsync(
+        public async Task<BaseResult> Command_DiceRollAsync(
             [Name("Dice")] [Description("The dice configuration to use. It can be simple, like `6`, or complex, like `d20+d18+4`.")]
             string dice = "6", [Name("Number of Dice")] [Description("The number of dice to roll.")]
             int numberOfDice = 1)
         {
             if (numberOfDice < 1)
             {
-                await ReplyAsync("You must ask me to roll at least one die!");
-                return;
+                return BadRequest("You must ask me to roll at least one die!");
             }
 
             if (numberOfDice > 100)
             {
-                await ReplyAsync("Sorry! No more than 100 dice rolls at once, please!");
-                return;
+                return BadRequest("Sorry! No more than 100 dice rolls at once, please!");
             }
 
             if (!dice.Contains("d" /* No dice */) && int.TryParse(dice, out var diceParsed))
             {
                 if (diceParsed < 1)
                 {
-                    await ReplyAsync("Your dice roll must be 1 or above!");
-                    return;
+                    return BadRequest("Your dice roll must be 1 or above!");
                 }
 
                 if (numberOfDice == 1)
                 {
-                    await ReplyAsync($"I rolled **{Random.Next(1, diceParsed)}** on a **{dice}**-sided die.");
-                    return;
+                    return Ok($"I rolled **{Random.Next(1, diceParsed)}** on a **{dice}**-sided die.");
                 }
 
-                await ReplyAsync(Enumerable.Range(1, numberOfDice).Select(a => $"- **Die {a}:** {Random.Next(1, diceParsed)}").Join("\n"));
-                return;
+                return Ok(Enumerable.Range(1, numberOfDice).Select(a => $"- **Die {a}:** {Random.Next(1, diceParsed)}").Join("\n"));
             }
 
             try
             {
-                await ReplyAsync(Enumerable.Range(1, numberOfDice).Select(a => $"- **Die {a}:** {DiceExpression.Evaluate(dice)}").Join("\n"));
+                return Ok(Enumerable.Range(1, numberOfDice).Select(a => $"- **Die {a}:** {DiceExpression.Evaluate(dice)}").Join("\n"));
             }
             catch (ArgumentException)
             {
-                await ReplyAsync("Invalid dice!");
+                return BadRequest("Invalid dice!");
             }
         }
 
         [Command("Is")]
         [Description("Determines if a user has a specific attribute.")]
-        public async Task IsUserAsync(SocketUser target, [Remainder] string attribute)
+        public async Task<BaseResult> IsUserAsync(SocketUser target, [Remainder] string attribute)
         {
             var @is = Random.Next(0, 2) == 1;
             attribute = attribute.Replace("?", ".");
             var username = target is SocketGuildUser u ? u.Nickname ?? u.Username : target.Username;
 
-            await ReplyAsync($"{(@is ? "Yes" : "No")}, {username} is {(@is ? "" : "not ")}{attribute}{(attribute.EndsWith(".") ? "" : ".")}");
+            return Ok($"{(@is ? "Yes" : "No")}, {username} is {(@is ? "" : "not ")}{attribute}{(attribute.EndsWith(".") ? "" : ".")}");
         }
 
         [Command("Does")]
         [Description("Determines if a user does something, or has an attribute.")]
-        public async Task DoesUserAsync(SocketUser target, [Remainder] string attribute)
+        public async Task<BaseResult> DoesUserAsync(SocketUser target, [Remainder] string attribute)
         {
             var does = Random.Next(0, 2) == 1;
             attribute = attribute.Replace("?", ".");
             var username = target is SocketGuildUser u ? u.Nickname ?? u.Username : target.Username;
 
-            await ReplyAsync($"{(does ? "Yes" : "No")}, {username} does {(does ? "" : "not ")}{attribute}{(attribute.EndsWith(".") ? "" : ".")}");
+            return Ok($"{(does ? "Yes" : "No")}, {username} does {(does ? "" : "not ")}{attribute}{(attribute.EndsWith(".") ? "" : ".")}");
         }
 
         [Command("Choose", "Pick")]
         [Description("Picks an option out of a list.")]
-        public async Task Command_PickOptionAsync(
+        public async Task<BaseResult> Command_PickOptionAsync(
             [Name("Options")] [Description("The options to choose from.")]
             params string[] options)
         {
             if (options.Length == 0)
             {
-                await ReplyAsync("You have to give me options to pick from!");
-                return;
+                return BadRequest("You have to give me options to pick from!");
             }
 
             var roll = Random.Next(0, options.Length);
-            await ReplyAsync($"I choose **{options[roll]}**.");
+            return Ok($"I choose **{options[roll]}**.");
         }
 
         public class DiceExpression

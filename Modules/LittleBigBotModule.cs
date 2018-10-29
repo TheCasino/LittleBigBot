@@ -11,6 +11,7 @@ using LittleBigBot.Attributes;
 using LittleBigBot.Checks;
 using LittleBigBot.Common;
 using LittleBigBot.Entities;
+using LittleBigBot.Results;
 using LittleBigBot.Services;
 using Microsoft.Extensions.Options;
 using Octokit;
@@ -48,17 +49,16 @@ namespace LittleBigBot.Modules
 
         [Command("Uptime")]
         [Description("Displays the time that this bot process has been running.")]
-        public async Task Command_GetUptimeAsync()
+        public async Task<BaseResult> Command_GetUptimeAsync()
         {
-            await ReplyAsync($"**Uptime:** {(DateTime.Now - Process.GetCurrentProcess().StartTime).Humanize(20)}");
+            return Ok($"**Uptime:** {(DateTime.Now - Process.GetCurrentProcess().StartTime).Humanize(20)}");
         }
 
         [Command("LittleBigBot", "Meta", "Info", "WhoAreYou", "About")]
         [RunMode(RunMode.Parallel)]
         [Description("Shows some information about me.")]
-        public async Task Command_GetLittleBigBotInfoAsync()
+        public async Task<BaseResult> Command_GetLittleBigBotInfoAsync()
         {
-            var message = await ReplyAsync("Working...");
             var app = await Context.Client.GetApplicationInfoAsync().ConfigureAwait(false);
             var response = new EmbedBuilder
             {
@@ -92,32 +92,27 @@ namespace LittleBigBot.Modules
             AddCommit(commits[0]);
             AddCommit(commits[1]);
             AddCommit(commits[2]);
-            await message.ModifyAsync(ma =>
-            {
-                ma.Embed = response.Build();
-                ma.Content = null;
-            });
             var embed = new EmbedBuilder();
             if (response.Color != null) embed.WithColor(response.Color.Value);
             embed.WithAuthor(a => a.WithIconUrl(response.Author.IconUrl).WithName("Recent Updates"));
             embed.WithDescription(recentCommitBuilder.ToString());
-            await ReplyAsync(string.Empty, false, embed.Build());
+            return Ok(response, embed);
         }
 
         [Command("Feedback", "Request")]
         [Description("Sends feedback to the developer.")]
-        public async Task Command_SendFeedbackAsync([Remainder] string feedback)
+        public async Task<BaseResult> Command_SendFeedbackAsync([Remainder] string feedback)
         {
-            await ReplyAsync("Feedback sent!");
-
             var app = await Context.Client.GetApplicationInfoAsync().ConfigureAwait(false);
             var _ = app.Owner.SendMessageAsync(
                 $"Feedback from {Context.Invoker} in {Context.Guild?.ToString() ?? "their DM channel"}:\n\"{feedback}\"");
+
+            return Ok("Feedback sent!");
         }
 
         [Command("Ping")]
         [Description("Benchmarks the connection to the Discord servers.")]
-        public async Task Command_PingAsync()
+        public async Task<BaseResult> Command_PingAsync()
         {
             var sw = Stopwatch.StartNew();
             var initial = await ReplyAsync("Pinging...");
@@ -144,12 +139,14 @@ namespace LittleBigBot.Modules
             }
 
             Context.Client.MessageReceived += Handler;
+
+            return NoResponse();
         }
 
         [Command("Permissions", "Perms", "PermList", "PermsList", "ListPerms")]
         [Description("Shows a list of a user's current guild-level permissions.")]
         [RequireDiscordContext(DiscordContextType.Server)]
-        public async Task Command_ShowPermissionsAsync([Name("Target")] [Description("The user to get permissions for.")] [DefaultValueDescription("The user who invoked this command.")]
+        public async Task<BaseResult> Command_ShowPermissionsAsync([Name("Target")] [Description("The user to get permissions for.")] [DefaultValueDescription("The user who invoked this command.")]
             SocketGuildUser user = null)
         {
             user = user ?? Context.InvokerMember; // Get the user (or the bot, if none specified)
@@ -161,15 +158,13 @@ namespace LittleBigBot.Modules
             if (user.Id == Context.Guild.OwnerId)
             {
                 embed.WithDescription("User is owner of server, and has all permissions");
-                await ReplyAsync(string.Empty, false, embed.Build());
-                return;
+                return Ok(embed);
             }
 
             if (user.GuildPermissions.Administrator)
             {
                 embed.WithDescription("User has Administrator permission, and has all permissions");
-                await ReplyAsync(string.Empty, false, embed.Build());
-                return;
+                return Ok(embed);
             }
 
             var guildPerms = user.GuildPermissions; // Get the user's permissions
@@ -185,13 +180,13 @@ namespace LittleBigBot.Modules
             var denyString = string.Join("\n", deny.Select(a => $"- {a.Item1}"));
             embed.AddField("Allowed", string.IsNullOrEmpty(allowString) ? "- None" : allowString, true);
             embed.AddField("Denied", string.Join("\n", string.IsNullOrEmpty(denyString) ? "- None" : denyString), true);
-            await ReplyAsync(string.Empty, false, embed.Build());
+            return Ok(embed);
         }
 
         [Command("HasPerm", "HavePerm", "HavePermission", "HasPermission")]
         [Description("Checks if I have a permission accepted.")]
         [RequireDiscordContext(DiscordContextType.Server)]
-        public async Task Command_HasPermissionAsync([Name("Permission")] [Remainder] [Description("The permission to check for.")]
+        public async Task<BaseResult> Command_HasPermissionAsync([Name("Permission")] [Remainder] [Description("The permission to check for.")]
             string permission)
         {
             var guildPerms = Context.Guild.CurrentUser.GuildPermissions;
@@ -202,31 +197,30 @@ namespace LittleBigBot.Modules
 
             if (boolProps.Count == 0)
             {
-                await ReplyAsync("Unknown permission :(");
-                return;
+                return BadRequest("Unknown permission :(");
             }
 
             var perm = boolProps.First();
             var name = perm.Name.Humanize();
             var value = (bool) perm.GetValue(guildPerms);
 
-            await ReplyAsync($"Permission `{name}`: **{(value ? "Yes" : "No")}**");
+            return Ok($"I have permission `{name}`: **{(value ? "Yes" : "No")}**");
         }
 
         [Command("Stats", "GInfo")]
         [Description("Retrieves statistics about the consumers of this bot.")]
-        public async Task Command_ViewStatsAsync()
+        public async Task<BaseResult> Command_ViewStatsAsync()
         {
-            await ReplyAsync($"Total Users: {Context.Client.Guilds.SelectMany(a => a.Users).Select(a => a.Id).Distinct().Count()} | Total Guilds: {Context.Client.Guilds.Count}\n{Format.Code(string.Join("\n\n", Context.Client.Guilds.Select(a => $"[Name: {a.Name}, ID: {a.Id}, Members: {a.MemberCount}, Owner: {a.Owner}]")), "ini")}");
+            return Ok($"Total Users: {Context.Client.Guilds.SelectMany(a => a.Users).Select(a => a.Id).Distinct().Count()} | Total Guilds: {Context.Client.Guilds.Count}\n{Format.Code(string.Join("\n\n", Context.Client.Guilds.Select(a => $"[Name: {a.Name}, ID: {a.Id}, Members: {a.MemberCount}, Owner: {a.Owner}]")), "ini")}");
         }
 
         [Command("DevInfo", "DI", "Dev", "Dump")]
         [Description(
             "Dumps current information about the client, the commands system and the current execution environment.")]
         [RequireOwner]
-        public async Task Command_MemoryDumpAsync()
+        public async Task<BaseResult> Command_MemoryDumpAsync()
         {
-            await ReplyAsync(new StringBuilder()
+            return Ok(new StringBuilder()
                 .AppendLine("```json")
                 .AppendLine("== Core ==")
                 .AppendLine($"{Context.Client.Guilds.Count} guilds")

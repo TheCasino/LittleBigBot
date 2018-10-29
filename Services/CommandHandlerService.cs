@@ -11,6 +11,7 @@ using LittleBigBot.Common;
 using LittleBigBot.Entities;
 using LittleBigBot.Modules;
 using LittleBigBot.Parsers;
+using LittleBigBot.Results;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Qmmands;
@@ -59,14 +60,35 @@ namespace LittleBigBot.Services
             _logger.LogInformation($"{modulesLoaded.Count} total modules loaded | {modulesLoaded.Sum(a => a.Commands.Count)} total commands loaded | 2 type parsers loaded");
         }
 
-        private Task HandleCommandExecutedAsync(Command command, CommandResult arg2, ICommandContext context0, IServiceProvider arg4)
+        private async Task HandleCommandFinishedGlobalAsync(Command command, CommandResult result,
+            LittleBigBotExecutionContext context)
         {
-            var context = context0.Cast<LittleBigBotExecutionContext>();
-            LogCommandExecution(context, command, true);
+            if (result.IsSuccessful) CommandSuccesses++;
+            else CommandFailures++;
+           
+            var baseResult = result.Cast<BaseResult>();
 
-            CommandSuccesses++;
+            if (baseResult.Content != null && !string.IsNullOrWhiteSpace(baseResult.Content))
+            {
+                await context.Channel.SendMessageAsync(baseResult.Content);
+            }
+                        
+            foreach (var embed in baseResult.Embeds)
+            {
+                await context.Channel.SendMessageAsync(string.Empty, false, embed.Build());
+            }
 
-            return Task.CompletedTask;
+            if (result is FailedBaseResult fbr)
+            {
+                LogCommandRuntimeFailure(context, command, fbr);
+            }
+
+            else LogCommandSuccess(context, command);
+        }
+
+        public Task HandleCommandExecutedAsync(Command command, CommandResult result, ICommandContext context, IServiceProvider arg4)
+        {
+            return HandleCommandFinishedGlobalAsync(command, result, context.Cast<LittleBigBotExecutionContext>());
         }
 
         private async Task HandleCommandErrorAsync(ExecutionFailedResult result, ICommandContext context0, IServiceProvider provider)
@@ -98,13 +120,31 @@ namespace LittleBigBot.Services
                     Text = $"If you believe this error is not because of your input, please contact {(await _client.GetApplicationInfoAsync()).Owner}!"
                 }
             };
-            _commandsTracking.LogError(exception, context.FormatString(command));
+            _commandsTracking.LogError(exception, context.FormatString(command) + " == DETAILS WILL FOLLOW ==");
+            LogCommandGeneralFailure(context, command, result);
             await context.Channel.SendMessageAsync(string.Empty, false, embed.Build());
         }
 
-        private void LogCommandExecution(LittleBigBotExecutionContext context, Command command, bool success, FailedResult result = null)
+        private string GenerateLogString(LittleBigBotExecutionContext context, Command command)
         {
-            _commandsTracking.LogInformation($"Executed command '{command.Aliases.First()}' for {context.Invoker} (ID {context.Invoker.Id}) in {context.Channel.Name} (ID {context.Channel.Id}){(context.Guild != null ? $" in guild {context.Guild.Name} (ID {context.Guild.Id})" : "")} {(success ? "successfully" : $"with error {result?.Reason}")}");
+            return
+                $"Executed command '{command.Aliases.First()}' for {context.Invoker} (ID {context.Invoker.Id}) in {context.Channel.Name} (ID {context.Channel.Id}){(context.Guild != null ? $" in guild {context.Guild.Name} (ID {context.Guild.Id})" : "")}";
+        }
+        
+        private void LogCommandSuccess(LittleBigBotExecutionContext context, Command command)
+        {
+            _commandsTracking.LogInformation(GenerateLogString(context, command) + " successfully");
+        }
+
+        private void LogCommandGeneralFailure(LittleBigBotExecutionContext context, Command command, FailedResult failure)
+        {
+            _commandsTracking.LogInformation(GenerateLogString(context, command) + $" unsuccessfully, with pre-run reason \"{failure.Reason}\"");
+        }
+
+        private void LogCommandRuntimeFailure(LittleBigBotExecutionContext context, Command command,
+            FailedBaseResult fbr)
+        {
+            _commandsTracking.LogInformation(GenerateLogString(context, command) + $" unsuccessfully, with run-time reason \"{fbr.Content}\"");
         }
 
         private async Task HandleMessageAsync(SocketMessage incomingMessage)
@@ -126,8 +166,7 @@ namespace LittleBigBot.Services
                 var result = await _commandService.ExecuteAsync(message.Content.Substring(argPos) /* Remove prefix from string */, context, _services);
 
                 if (result.IsSuccessful) return;
-                CommandFailures++;
-
+                
                 Command command;
 
                 switch (result)
@@ -170,11 +209,11 @@ namespace LittleBigBot.Services
                         await context.Channel.SendMessageAsync(msg.ToString());
                         break;
                     default:
-                        await context.Channel.SendMessageAsync($"Failed: {result}");
+                        await context.Channel.SendMessageAsync($"Generic failure: {result}");
                         return;
                 }
-
-                LogCommandExecution(context, command, false, result as FailedResult);
+                
+                LogCommandGeneralFailure(context, command, result as FailedResult);
             }
             catch (Exception)
             {

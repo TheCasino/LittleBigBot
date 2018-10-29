@@ -6,6 +6,7 @@ using Discord.WebSocket;
 using LittleBigBot.Attributes;
 using LittleBigBot.Checks;
 using LittleBigBot.Entities;
+using LittleBigBot.Results;
 using Qmmands;
 
 /**
@@ -25,7 +26,7 @@ namespace LittleBigBot.Modules
         [Remarks("Requires that both the user and the bot have the 'Ban Members' permission.")]
         [RequireUserPermission(GuildPermission.BanMembers)]
         [RequireBotPermission(GuildPermission.BanMembers)]
-        public async Task BanUserAsync(
+        public async Task<BaseResult> BanUserAsync(
             [Name("Ban Target")] [Description("The user to ban.")]
             SocketGuildUser target,
             [Name("Ban Reason")] [Description("The audit log reason for the ban.")] [DefaultValueDescription("None")]
@@ -35,14 +36,12 @@ namespace LittleBigBot.Modules
         {
             if (target.Id == Context.Invoker.Id)
             {
-                await ReplyAsync("I can't ban you!");
-                return;
+                return BadRequest("I can't ban you!");
             }
 
             if (target.Id == Context.Client.CurrentUser.Id)
             {
-                await ReplyAsync("I can't ban myself!");
-                return;
+                return BadRequest("I can't ban myself!");
             }
 
             try
@@ -54,12 +53,11 @@ namespace LittleBigBot.Modules
             }
             catch (HttpException e) when (e.HttpCode == HttpStatusCode.Forbidden)
             {
-                await ReplyAsync(
-                    $":negative_squared_cross_mark: Cannot ban '{target.Nickname ?? target.Username}' because that user is more powerful than me!");
-                return;
+                return BadRequest(
+                    $"Cannot ban '{target.Nickname ?? target.Username}' because that user is more powerful than me!");
             }
 
-            await ReplyAsync(
+            return Ok(
                 $":white_check_mark: Banned '{target.Nickname ?? target.Username}'{(reason != null ? " with reason '" + reason + "'" : "")}. {(pruneDays != 0 ? $"Removing {pruneDays} worth of messages from them." : "")}");
         }
     }

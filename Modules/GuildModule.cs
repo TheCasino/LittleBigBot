@@ -7,6 +7,7 @@ using Humanizer;
 using LittleBigBot.Checks;
 using LittleBigBot.Common;
 using LittleBigBot.Entities;
+using LittleBigBot.Results;
 using Qmmands;
 
 /**
@@ -23,11 +24,12 @@ namespace LittleBigBot.Modules
     [RequireDiscordContext(DiscordContextType.Server)]
     public class GuildModule : LittleBigBotModuleBase
     {
-        [Command("AuditLog")]
+        // pending rewrite
+        /*[Command("AuditLog")]
         [Description("Gets an interactive panel for viewing audit log data for this server.")]
         [RequireBotPermission(GuildPermission.ViewAuditLog)]
         [RequireUserPermission(GuildPermission.ViewAuditLog)]
-        public async Task Command_ViewAuditLogsAsync(
+        public async Task<BaseResult> Command_ViewAuditLogsAsync(
             [Description("The amount of audit logs to download.")] [Name("Download Count")]
             int limit = 50)
         {
@@ -47,12 +49,12 @@ namespace LittleBigBot.Modules
             {
                 await ReplyAsync("Too many audit logs! Try lowering your request limit.");
             }
-        }
+        }*/
 
         [Command("Server", "ServerInfo", "Guild", "GuildInfo")]
         [Description("Grabs information around this server.")]
         [RequireDiscordContext(DiscordContextType.Server)]
-        public async Task Command_GuildInfoAsync()
+        public async Task<BaseResult> Command_GuildInfoAsync()
         {
             var embed = new EmbedBuilder
             {
@@ -94,7 +96,7 @@ namespace LittleBigBot.Modules
                 }
             };
 
-            await ReplyAsync(string.Empty, false, embed.Build());
+            return Ok(embed);
         }
     }
 }

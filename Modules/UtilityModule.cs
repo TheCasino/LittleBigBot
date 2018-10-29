@@ -7,6 +7,7 @@ using LittleBigBot.Attributes;
 using LittleBigBot.Checks;
 using LittleBigBot.Common;
 using LittleBigBot.Entities;
+using LittleBigBot.Results;
 using LittleBigBot.Services;
 using Qmmands;
 
@@ -32,26 +33,25 @@ namespace LittleBigBot.Modules
         [Command("Spoiler", "CreateSpoiler")]
         [Description("Creates a spoiler message, direct messaging users who would like to see the spoiler.")]
         [RequireDiscordContext(DiscordContextType.Server)]
-        public async Task Command_CreateSpoilerAsync([Name("Safe Text")] [Description("A name for the spoiler, that everyone will be able to see.")]
+        public async Task<BaseResult> Command_CreateSpoilerAsync([Name("Safe Text")] [Description("A name for the spoiler, that everyone will be able to see.")]
             string safe, [Name("Spoiler")] [Description("The content of the spoiler.")] [Remainder]
             string spoiler)
         {
             await SpoilerService.CreateSpoilerMessageAsync(Context, safe, spoiler).ConfigureAwait(false);
+            return NoResponse();
         }
 
         [Command("Echo")]
         [Description("Echoes the input text.")]
-        public async Task Command_EchoAsync([Name("Text")] [Remainder] string echocontent)
+        public async Task<BaseResult> Command_EchoAsync([Name("Text")] [Remainder] string echocontent)
         {
-            if (Context.Invoker.Id == (await Context.Client.GetApplicationInfoAsync()).Owner.Id)
-                await ReplyAsync(echocontent);
-            else await ReplyAsync(string.IsNullOrWhiteSpace(echocontent) ? "Nothing provided." : $"{Context.Invoker}: {echocontent}");
+            return Context.Invoker.Id == (await Context.Client.GetApplicationInfoAsync()).Owner.Id ? Ok(echocontent) : Ok(string.IsNullOrWhiteSpace(echocontent) ? "Nothing provided." : $"{Context.Invoker}: {echocontent}");
         }
 
         [Command("Echod")]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
         [Description("Attempts to delete the source message, and then echoes the input text.")]
-        public async Task Command_EchoDeleteAsync([Name("Text")] [Remainder] string echocontent)
+        public async Task<BaseResult> Command_EchoDeleteAsync([Name("Text")] [Remainder] string echocontent)
         {
             try
             {
@@ -62,16 +62,14 @@ namespace LittleBigBot.Modules
                 // ignored
             }
 
-            if (Context.Invoker.Id == (await Context.Client.GetApplicationInfoAsync()).Owner.Id)
-                await ReplyAsync(echocontent);
-            else await ReplyAsync(string.IsNullOrWhiteSpace(echocontent) ? "Nothing provided." : $"{Context.Invoker}: {echocontent}");
+            return Context.Invoker.Id == (await Context.Client.GetApplicationInfoAsync()).Owner.Id ? Ok(echocontent) : Ok(string.IsNullOrWhiteSpace(echocontent) ? "Nothing provided." : $"{Context.Invoker}: {echocontent}");
         }
 
         [Command("Delete")]
         [Description("Deletes a message by ID.")]
         [RequireUserPermission(ChannelPermission.ManageMessages)]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
-        public async Task Command_DeleteMessageAsync(
+        public async Task<BaseResult> Command_DeleteMessageAsync(
             [Name("Message")] [Description("The ID of the message to delete.")]
             ulong messageId,
             [Name("Silence")] [Description("Whether to respond with confirmation of the deletion.")]
@@ -85,16 +83,17 @@ namespace LittleBigBot.Modules
                     var opt = RequestOptions.Default;
                     opt.AuditLogReason = $"Requested by {Context.Invoker} at {DateTime.UtcNow.ToUniversalTime():F}";
                     await message.DeleteAsync(opt);
-                    if (!silent) await ReplyAsync($"Deleted message {messageId}.");
+                    if (!silent) return Ok($"Deleted message {messageId}.");
+                    return NoResponse();
                 }
                 catch (Exception)
                 {
-                    await ReplyAsync("Failed to delete message. Do I have permissions?");
+                    return BadRequest("Failed to delete message. Do I have permissions?");
                 }
             }
             catch (Exception)
             {
-                await ReplyAsync("Failed to get message, did you pass an invalid ID?");
+                return BadRequest("Failed to get message, did you pass an invalid ID?");
             }
         }
 
@@ -102,7 +101,7 @@ namespace LittleBigBot.Modules
         [Description("Clears a number of messages from a source message, in a certain direction.")]
         [RequireUserPermission(ChannelPermission.ManageMessages)]
         [RequireBotPermission(ChannelPermission.ManageMessages)]
-        public async Task Command_ClearAllAsync(
+        public async Task<BaseResult> Command_ClearAllAsync(
             [Name("Count")] [Description("The number of messages to delete.")]
             int count = 50,
             [Name("Direction")] [Description("The direction to delete in.")]
@@ -115,32 +114,29 @@ namespace LittleBigBot.Modules
 
             if (count > 100)
             {
-                await ReplyAsync("Cannot delete more than 50 messages.");
-                return;
+                return BadRequest("Cannot delete more than 50 messages.");
             }
 
             if (!(Context.Channel is SocketTextChannel gc))
             {
-                await ReplyAsync("Due to API limitations, this command can only be used in a server channel.");
-                return;
+                return BadRequest("Due to API limitations, this command can only be used in a server channel.");
             }
 
             var messages = (await gc.GetMessagesAsync(sourceMessageId, direction, count).FlattenAsync()).ToList();
 
             await gc.DeleteMessagesAsync(messages);
 
-            await ReplyAsync($"Deleted `{messages.Count}` messages.");
+            return Ok($"Deleted `{messages.Count}` messages.");
         }
 
         [Command("Time", "TimeZone", "TZ", "TimeNow")]
         [Description("Displays the current time in a specific timezone.")]
         [Remarks("This command is difficult and unwieldly to use, because timezone data changes depending on the host platform for the bot.")]
-        public async Task Command_GetTimeAsync(
+        public async Task<BaseResult> Command_GetTimeAsync(
             [Name("Timezone")] [Description("The timezone to view time data for.")] [DefaultValueDescription("The bot will show you a list of all timezones available on the system.")] [Remainder]
             string timezone)
         {
             timezone = timezone.Replace(" ", "_").Replace("UTC", "GMT").Replace("US", "America").Replace("USA", "America");
-            var message = await ReplyAsync("Working...");
 
             var timezones = TimeZoneInfo.GetSystemTimeZones();
 
@@ -170,7 +166,7 @@ namespace LittleBigBot.Modules
 
             var content = tz == null ? $"Cannot find timezone data for ``{timezone}``." : $"**{tz.StandardName} ({timezoneIds})**: {FormatTimezone(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz))}";
 
-            await message.ModifyAsync(a => { a.Content = content; });
+            return Ok(content);
         }
 
         private static string FormatTimezone(DateTime time)
@@ -180,15 +176,14 @@ namespace LittleBigBot.Modules
 
         [Command("Quote")]
         [Description("Quotes a message sent by a user.")]
-        public async Task Command_QuoteMessageAsync([Name("ID")] [Description("The ID of the message.")]
+        public async Task<BaseResult> Command_QuoteMessageAsync([Name("ID")] [Description("The ID of the message.")]
             ulong messageId)
         {
             var message = Context.Channel.GetCachedMessage(messageId) ?? await Context.Channel.GetMessageAsync(messageId);
 
             if (message == null)
             {
-                await ReplyAsync("Cannot find message.");
-                return;
+                return BadRequest("Cannot find message.");
             }
 
             var jumpurl = message.GetJumpUrl();
@@ -210,7 +205,7 @@ namespace LittleBigBot.Modules
                 if (attach0 != null) embed.WithImageUrl(attach0.Url);
             }
 
-            await ReplyAsync(string.Empty, false, embed.Build());
+            return Ok(embed);
         }
     }
 }

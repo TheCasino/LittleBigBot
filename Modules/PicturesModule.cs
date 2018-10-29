@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Threading.Tasks;
 using Discord;
@@ -21,28 +22,30 @@ namespace LittleBigBot.Modules
         [Description("Pictures from lewd.bowsette.pictures.")]
         [Remarks("This website has not been filtered, so there could be NSFW content.")]
         [RequireNsfw]
-        public async Task Command_GetBowsettePictureAsync()
+        public async Task<CommandResult> Command_GetBowsettePictureAsync()
         {
             var url = JToken.Parse(await HttpApi.DownloadStringTaskAsync(BowsetteApi)).Value<string>("url");
 
-            await ReplyAsync(string.Empty, false, new EmbedBuilder()
-                .WithTitle("Bowsette!")
-                .WithColor(LittleBigBot.DefaultEmbedColour)
-                .WithImageUrl(url)
-                .Build());
+            return Ok(embed =>
+            {
+                embed.WithTitle("Here's your Bowsette, pervert.")
+                    .WithColor(LittleBigBot.DefaultEmbedColour)
+                    .WithImageUrl(url);
+            });
         }
 
         [Command("Cat", "Meow")]
         [Description("Meow.")]
-        public async Task Command_GetCatPictureAsync()
+        public async Task<CommandResult> Command_GetCatPictureAsync()
         {
             var url = JToken.Parse(await HttpApi.DownloadStringTaskAsync(CatApi)).Value<string>("file");
 
-            await ReplyAsync(string.Empty, false, new EmbedBuilder()
-                .WithTitle("Meow.")
-                .WithColor(LittleBigBot.DefaultEmbedColour)
-                .WithImageUrl(url)
-                .Build());
+            return Ok(embed =>
+            {
+                embed.WithTitle("Meow~!")
+                    .WithColor(LittleBigBot.DefaultEmbedColour)
+                    .WithImageUrl(url);
+            });
         }
     }
 }

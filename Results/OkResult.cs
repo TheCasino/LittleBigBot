@@ -1,10 +1,13 @@
+using Discord;
+
 namespace LittleBigBot.Results
 {
-    public class OkResult: CompletedResult
+    public class OkResult: BaseResult
     {
-        public OkResult(string customResponse = null) : base(customResponse ?? "Okay.", null)
-        {
+        public override bool IsSuccessful => true;
 
+        public OkResult(string content, params EmbedBuilder[] embed) : base(content, embed)
+        {
         }
     }
 }

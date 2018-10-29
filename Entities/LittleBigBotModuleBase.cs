@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Rest;
+using LittleBigBot.Results;
 using NLog;
 using Qmmands;
 
@@ -35,6 +36,16 @@ namespace LittleBigBot.Entities
         public Task<RestUserMessage> ReplyAsync(string content = "", bool isTts = false, Embed embed = null, RequestOptions options = null)
         {
             return Context.Channel.SendMessageAsync(content, isTts, embed, options);
+        }
+
+        public CompletedResult Completed(string content = null, EmbedBuilder embed = null)
+        {
+            return new CompletedResult(content, embed);
+        }
+
+        public OkResult Ok(string customResponse = null)
+        {
+            return new OkResult(customResponse);
         }
     }
 }

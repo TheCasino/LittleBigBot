@@ -250,7 +250,7 @@ namespace LittleBigBot.Modules
         }
 
         [Name("Service Management")]
-        [Group("Services", "Service")]
+        [Group("Service", "Services")]
         [Description("Provides commands to enable, disable, and reload LittleBigBot services.")]
         public class ServicesSubmodule : LittleBigBotModuleBase
         {

@@ -33,20 +33,20 @@ namespace LittleBigBot.Services
         {
             var message = await messageCacheable.GetOrDownloadAsync();
 
-            if (_spoilers.ContainsKey(message.Id))
+            if (_spoilers.TryGetValue(message.Id, out var spoiler))
             {
-                if (_spoilers[message.Id].users.Contains(reaction.UserId)) return;
+                if (spoiler.users.Contains(reaction.UserId)) return;
                 try
                 {
                     await _client.GetUser(reaction.UserId).SendMessageAsync(
-                        $"**Spoiler for \"{_spoilers[message.Id].name}\":** " + _spoilers[message.Id].spoiler);
+                        $"**Spoiler for \"{spoiler.name}\":** " + spoiler.spoiler);
                 }
                 catch (Exception)
                 {
                     // ignored
                 }
 
-                _spoilers[message.Id].users.Add(reaction.UserId);
+                spoiler.users.Add(reaction.UserId);
             }
         }
 
@@ -65,7 +65,7 @@ namespace LittleBigBot.Services
             context.Message.DeleteAsync(new RequestOptions
             {
                 AuditLogReason =
-                    $"LittleBigBot Spoiler Command - created by {context.Invoker} (ID {context.Invoker.Id})"
+                    $"LittleBigBot Spoiler Command - spoiler created by {context.Invoker} (ID {context.Invoker.Id})"
             }).ConfigureAwait(false);
 
             var msg = await context.Channel.SendMessageAsync(

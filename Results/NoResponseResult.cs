@@ -1,8 +1,6 @@
-using Discord;
-
 namespace LittleBigBot.Results
 {
-    public class NoResponseResult: BaseResult
+    public class NoResponseResult : BaseResult
     {
         public NoResponseResult() : base(null)
         {

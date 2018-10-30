@@ -33,7 +33,8 @@ namespace LittleBigBot.Modules
         [Command("Spoiler", "CreateSpoiler")]
         [Description("Creates a spoiler message, direct messaging users who would like to see the spoiler.")]
         [RequireDiscordContext(DiscordContextType.Server)]
-        public async Task<BaseResult> Command_CreateSpoilerAsync([Name("Safe Text")] [Description("A name for the spoiler, that everyone will be able to see.")]
+        public async Task<BaseResult> Command_CreateSpoilerAsync(
+            [Name("Safe Text")] [Description("A name for the spoiler, that everyone will be able to see.")]
             string safe, [Name("Spoiler")] [Description("The content of the spoiler.")] [Remainder]
             string spoiler)
         {
@@ -45,7 +46,11 @@ namespace LittleBigBot.Modules
         [Description("Echoes the input text.")]
         public async Task<BaseResult> Command_EchoAsync([Name("Text")] [Remainder] string echocontent)
         {
-            return Context.Invoker.Id == (await Context.Client.GetApplicationInfoAsync()).Owner.Id ? Ok(echocontent) : Ok(string.IsNullOrWhiteSpace(echocontent) ? "Nothing provided." : $"{Context.Invoker}: {echocontent}");
+            return Context.Invoker.Id == (await Context.Client.GetApplicationInfoAsync()).Owner.Id
+                ? Ok(echocontent)
+                : Ok(string.IsNullOrWhiteSpace(echocontent)
+                    ? "Nothing provided."
+                    : $"{Context.Invoker}: {echocontent}");
         }
 
         [Command("Echod")]
@@ -62,7 +67,11 @@ namespace LittleBigBot.Modules
                 // ignored
             }
 
-            return Context.Invoker.Id == (await Context.Client.GetApplicationInfoAsync()).Owner.Id ? Ok(echocontent) : Ok(string.IsNullOrWhiteSpace(echocontent) ? "Nothing provided." : $"{Context.Invoker}: {echocontent}");
+            return Context.Invoker.Id == (await Context.Client.GetApplicationInfoAsync()).Owner.Id
+                ? Ok(echocontent)
+                : Ok(string.IsNullOrWhiteSpace(echocontent)
+                    ? "Nothing provided."
+                    : $"{Context.Invoker}: {echocontent}");
         }
 
         [Command("Delete")]
@@ -112,15 +121,10 @@ namespace LittleBigBot.Modules
         {
             if (sourceMessageId == 0) sourceMessageId = Context.Message.Id;
 
-            if (count > 100)
-            {
-                return BadRequest("Cannot delete more than 50 messages.");
-            }
+            if (count > 100) return BadRequest("Cannot delete more than 50 messages.");
 
             if (!(Context.Channel is SocketTextChannel gc))
-            {
                 return BadRequest("Due to API limitations, this command can only be used in a server channel.");
-            }
 
             var messages = (await gc.GetMessagesAsync(sourceMessageId, direction, count).FlattenAsync()).ToList();
 
@@ -131,18 +135,25 @@ namespace LittleBigBot.Modules
 
         [Command("Time", "TimeZone", "TZ", "TimeNow")]
         [Description("Displays the current time in a specific timezone.")]
-        [Remarks("This command is difficult and unwieldly to use, because timezone data changes depending on the host platform for the bot.")]
+        [Remarks(
+            "This command is difficult and unwieldly to use, because timezone data changes depending on the host platform for the bot.")]
         public async Task<BaseResult> Command_GetTimeAsync(
-            [Name("Timezone")] [Description("The timezone to view time data for.")] [DefaultValueDescription("The bot will show you a list of all timezones available on the system.")] [Remainder]
+            [Name("Timezone")]
+            [Description("The timezone to view time data for.")]
+            [DefaultValueDescription("The bot will show you a list of all timezones available on the system.")]
+            [Remainder]
             string timezone)
         {
-            timezone = timezone.Replace(" ", "_").Replace("UTC", "GMT").Replace("US", "America").Replace("USA", "America");
+            timezone = timezone.Replace(" ", "_").Replace("UTC", "GMT").Replace("US", "America")
+                .Replace("USA", "America");
 
             var timezones = TimeZoneInfo.GetSystemTimeZones();
 
             var idMatches = timezones.Where(a => a.Id.Equals(timezone, StringComparison.OrdinalIgnoreCase)).ToList();
-            var displayMatches = timezones.Where(a => a.DisplayName.Equals(timezone, StringComparison.OrdinalIgnoreCase)).ToList();
-            var standardMatches = timezones.Where(a => a.StandardName.Equals(timezone, StringComparison.OrdinalIgnoreCase)).ToList();
+            var displayMatches = timezones
+                .Where(a => a.DisplayName.Equals(timezone, StringComparison.OrdinalIgnoreCase)).ToList();
+            var standardMatches = timezones
+                .Where(a => a.StandardName.Equals(timezone, StringComparison.OrdinalIgnoreCase)).ToList();
 
             TimeZoneInfo tz = null;
             var timezoneIds = "";
@@ -164,7 +175,9 @@ namespace LittleBigBot.Modules
                 timezoneIds = string.Join(", ", standardMatches.Select(a => a.Id));
             }
 
-            var content = tz == null ? $"Cannot find timezone data for ``{timezone}``." : $"**{tz.StandardName} ({timezoneIds})**: {FormatTimezone(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz))}";
+            var content = tz == null
+                ? $"Cannot find timezone data for ``{timezone}``."
+                : $"**{tz.StandardName} ({timezoneIds})**: {FormatTimezone(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz))}";
 
             return Ok(content);
         }
@@ -179,12 +192,10 @@ namespace LittleBigBot.Modules
         public async Task<BaseResult> Command_QuoteMessageAsync([Name("ID")] [Description("The ID of the message.")]
             ulong messageId)
         {
-            var message = Context.Channel.GetCachedMessage(messageId) ?? await Context.Channel.GetMessageAsync(messageId);
+            var message = Context.Channel.GetCachedMessage(messageId) ??
+                          await Context.Channel.GetMessageAsync(messageId);
 
-            if (message == null)
-            {
-                return BadRequest("Cannot find message.");
-            }
+            if (message == null) return BadRequest("Cannot find message.");
 
             var jumpurl = message.GetJumpUrl();
 
@@ -197,7 +208,8 @@ namespace LittleBigBot.Modules
             });
             embed.WithTimestamp(message.Timestamp);
             embed.WithColor(message.Author.GetHighestRoleColourOrDefault());
-            embed.WithDescription((string.IsNullOrWhiteSpace(message.Content) ? "<< No content >>" : message.Content) + "\n\n" + jumpurl);
+            embed.WithDescription((string.IsNullOrWhiteSpace(message.Content) ? "<< No content >>" : message.Content) +
+                                  "\n\n" + jumpurl);
 
             if (message.Attachments.Any())
             {

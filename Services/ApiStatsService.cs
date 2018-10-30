@@ -9,7 +9,7 @@ namespace LittleBigBot.Services
 {
     [Name("API Stats")]
     [Description("Provides statistical data about API requests and errors that have occurred in this shard.")]
-    public sealed class ApiStatsService: BaseService
+    public sealed class ApiStatsService : BaseService
     {
         public ApiStatsService(DiscordSocketClient client)
         {
@@ -48,7 +48,8 @@ namespace LittleBigBot.Services
             return Task.CompletedTask;
         }
 
-        private Task HandleMessageUpdatedAsync(Cacheable<IMessage, ulong> old, SocketMessage @new, ISocketMessageChannel channel)
+        private Task HandleMessageUpdatedAsync(Cacheable<IMessage, ulong> old, SocketMessage @new,
+            ISocketMessageChannel channel)
         {
             MessageUpdate++;
             return Task.CompletedTask;

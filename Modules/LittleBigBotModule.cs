@@ -67,7 +67,8 @@ namespace LittleBigBot.Modules
                 ThumbnailUrl = Context.Client.CurrentUser.GetEffectiveAvatarUrl(),
                 Description = string.IsNullOrEmpty(app.Description) ? "None" : app.Description
             };
-            var commits = await GHClient.Repository.Commit.GetAll(GitHubModule.GitHubRepoOwner, GitHubModule.GitHubRepoName);
+            var commits =
+                await GHClient.Repository.Commit.GetAll(GitHubModule.GitHubRepoOwner, GitHubModule.GitHubRepoName);
 
             response.Author.Name = "Information about LittleBigBot";
 
@@ -79,7 +80,8 @@ namespace LittleBigBot.Modules
                 .AddField("Modules", CommandService.GetModules().Count(), true)
                 .AddField("Support Server", "https://discord.gg/bVUVjSr", true)
                 .AddField("Source", $"https://github.com/{GitHubModule.GitHubRepoOwner}/{GitHubModule.GitHubRepoName}/")
-                .AddField("Language/Library", $"C# (on the .NET Core stack) | Discord.Net {DiscordConfig.Version} + Qmmands");
+                .AddField("Language/Library",
+                    $"C# (on the .NET Core stack) | Discord.Net {DiscordConfig.Version} + Qmmands");
 
             var recentCommitBuilder = new StringBuilder();
 
@@ -146,7 +148,10 @@ namespace LittleBigBot.Modules
         [Command("Permissions", "Perms", "PermList", "PermsList", "ListPerms")]
         [Description("Shows a list of a user's current guild-level permissions.")]
         [RequireDiscordContext(DiscordContextType.Server)]
-        public async Task<BaseResult> Command_ShowPermissionsAsync([Name("Target")] [Description("The user to get permissions for.")] [DefaultValueDescription("The user who invoked this command.")]
+        public async Task<BaseResult> Command_ShowPermissionsAsync(
+            [Name("Target")]
+            [Description("The user to get permissions for.")]
+            [DefaultValueDescription("The user who invoked this command.")]
             SocketGuildUser user = null)
         {
             user = user ?? Context.InvokerMember; // Get the user (or the bot, if none specified)
@@ -169,11 +174,16 @@ namespace LittleBigBot.Modules
 
             var guildPerms = user.GuildPermissions; // Get the user's permissions
 
-            var booleanTypeProperties = guildPerms.GetType().GetProperties().Where(a => a.PropertyType.IsAssignableFrom(typeof(bool))).ToList(); // Get all properties that have a property type of Boolean
+            var booleanTypeProperties = guildPerms.GetType().GetProperties()
+                .Where(a => a.PropertyType.IsAssignableFrom(typeof(bool)))
+                .ToList(); // Get all properties that have a property type of Boolean
 
-            var propDict = booleanTypeProperties.Select(a => (a.Name.Humanize(), (bool) a.GetValue(guildPerms))).OrderByDescending(ab => ab.Item2 ? 1 : 0 /* Allowed permissions first */).ToList(); // Store permissions as a tuple of (string Name, bool Allowed) and order by allowed permissions first
+            var propDict = booleanTypeProperties.Select(a => (a.Name.Humanize(), (bool) a.GetValue(guildPerms)))
+                .OrderByDescending(ab => ab.Item2 ? 1 : 0 /* Allowed permissions first */)
+                .ToList(); // Store permissions as a tuple of (string Name, bool Allowed) and order by allowed permissions first
 
-            var accept = propDict.Where(ab => ab.Item2).OrderBy(a => a.Item1); // Filter an array of accepted permissions
+            var accept =
+                propDict.Where(ab => ab.Item2).OrderBy(a => a.Item1); // Filter an array of accepted permissions
             var deny = propDict.Where(ab => !ab.Item2).OrderBy(a => a.Item2); // Filter an array of denied permissions
 
             var allowString = string.Join("\n", accept.Select(a => $"- {a.Item1}"));
@@ -186,19 +196,20 @@ namespace LittleBigBot.Modules
         [Command("HasPerm", "HavePerm", "HavePermission", "HasPermission")]
         [Description("Checks if I have a permission accepted.")]
         [RequireDiscordContext(DiscordContextType.Server)]
-        public async Task<BaseResult> Command_HasPermissionAsync([Name("Permission")] [Remainder] [Description("The permission to check for.")]
+        public async Task<BaseResult> Command_HasPermissionAsync(
+            [Name("Permission")] [Remainder] [Description("The permission to check for.")]
             string permission)
         {
             var guildPerms = Context.Guild.CurrentUser.GuildPermissions;
             var props = guildPerms.GetType().GetProperties();
 
-            var boolProps = props.Where(a => a.PropertyType.IsAssignableFrom(typeof(bool)) && (a.Name.Equals(permission, StringComparison.OrdinalIgnoreCase) || a.Name.Humanize().Equals(permission, StringComparison.OrdinalIgnoreCase))).ToList();
+            var boolProps = props.Where(a =>
+                a.PropertyType.IsAssignableFrom(typeof(bool)) &&
+                (a.Name.Equals(permission, StringComparison.OrdinalIgnoreCase) ||
+                 a.Name.Humanize().Equals(permission, StringComparison.OrdinalIgnoreCase))).ToList();
             /* Get a list of all properties of Boolean type and that match either the permission specified, or match it   when humanized */
 
-            if (boolProps.Count == 0)
-            {
-                return BadRequest("Unknown permission :(");
-            }
+            if (boolProps.Count == 0) return BadRequest("Unknown permission :(");
 
             var perm = boolProps.First();
             var name = perm.Name.Humanize();
@@ -211,7 +222,8 @@ namespace LittleBigBot.Modules
         [Description("Retrieves statistics about the consumers of this bot.")]
         public async Task<BaseResult> Command_ViewStatsAsync()
         {
-            return Ok($"Total Users: {Context.Client.Guilds.SelectMany(a => a.Users).Select(a => a.Id).Distinct().Count()} | Total Guilds: {Context.Client.Guilds.Count}\n{Format.Code(string.Join("\n\n", Context.Client.Guilds.Select(a => $"[Name: {a.Name}, ID: {a.Id}, Members: {a.MemberCount}, Owner: {a.Owner}]")), "ini")}");
+            return Ok(
+                $"Total Users: {Context.Client.Guilds.SelectMany(a => a.Users).Select(a => a.Id).Distinct().Count()} | Total Guilds: {Context.Client.Guilds.Count}\n{Format.Code(string.Join("\n\n", Context.Client.Guilds.Select(a => $"[Name: {a.Name}, ID: {a.Id}, Members: {a.MemberCount}, Owner: {a.Owner}]")), "ini")}");
         }
 
         [Command("DevInfo", "DI", "Dev", "Dump")]

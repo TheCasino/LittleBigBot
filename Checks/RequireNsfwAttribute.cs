@@ -12,7 +12,8 @@ namespace LittleBigBot.Checks
         {
             var context = context0.Cast<LittleBigBotExecutionContext>();
 
-            if (context.GuildChannel == null || !context.GuildChannel.IsNsfw) return Task.FromResult(new CheckResult("This command can only be used in an NSFW channel."));
+            if (context.GuildChannel == null || !context.GuildChannel.IsNsfw)
+                return Task.FromResult(new CheckResult("This command can only be used in an NSFW channel."));
             return Task.FromResult(CheckResult.Successful);
         }
     }

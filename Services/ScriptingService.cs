@@ -14,7 +14,7 @@ namespace LittleBigBot.Services
 {
     [Name("Scripting")]
     [Description("Allows .NET Core/Roslyn API scripting.")]
-    public sealed class ScriptingService: BaseService
+    public sealed class ScriptingService : BaseService
     {
         public static readonly List<string> Imports = new List<string>
         {
@@ -26,9 +26,13 @@ namespace LittleBigBot.Services
             "LittleBigBot.Modules", "System.Reflection"
         };
 
-        public async Task<ScriptingResult> EvaluateScriptAsync<T>(string code, T properties, IEnumerable<string> additionalReferences = null)
+        public async Task<ScriptingResult> EvaluateScriptAsync<T>(string code, T properties,
+            IEnumerable<string> additionalReferences = null)
         {
-            if (string.IsNullOrWhiteSpace(code)) return ScriptingResult.FromError(new ArgumentException("code parameter cannot be empty, null or whitespace", nameof(code)), ScriptStage.Preprocessing);
+            if (string.IsNullOrWhiteSpace(code))
+                return ScriptingResult.FromError(
+                    new ArgumentException("code parameter cannot be empty, null or whitespace", nameof(code)),
+                    ScriptStage.Preprocessing);
 
             var imports = Imports;
             if (additionalReferences != null) imports.AddRange(additionalReferences);
@@ -44,7 +48,10 @@ namespace LittleBigBot.Services
             var compilationTimer = Stopwatch.StartNew();
             var compilationDiagnostics = script.Compile();
 
-            if (compilationDiagnostics.Length > 0 && compilationDiagnostics.Any(a => a.Severity == DiagnosticSeverity.Error)) return ScriptingResult.FromError(compilationDiagnostics, ScriptStage.Compilation, compilationTime: compilationTimer.ElapsedMilliseconds);
+            if (compilationDiagnostics.Length > 0 &&
+                compilationDiagnostics.Any(a => a.Severity == DiagnosticSeverity.Error))
+                return ScriptingResult.FromError(compilationDiagnostics, ScriptStage.Compilation,
+                    compilationTime: compilationTimer.ElapsedMilliseconds);
 
             compilationTimer.Stop();
 
@@ -56,11 +63,13 @@ namespace LittleBigBot.Services
                 var executionResult = await script.RunAsync(properties);
                 executionTimer.Stop();
                 var returnValue = executionResult.ReturnValue;
-                return ScriptingResult.FromSuccess(returnValue, compilationTimer.ElapsedMilliseconds, executionTimer.ElapsedMilliseconds);
+                return ScriptingResult.FromSuccess(returnValue, compilationTimer.ElapsedMilliseconds,
+                    executionTimer.ElapsedMilliseconds);
             }
             catch (Exception exception)
             {
-                return ScriptingResult.FromError(exception, ScriptStage.Execution, compilationTimer.ElapsedMilliseconds, executionTimer.ElapsedMilliseconds);
+                return ScriptingResult.FromError(exception, ScriptStage.Execution, compilationTimer.ElapsedMilliseconds,
+                    executionTimer.ElapsedMilliseconds);
             }
         }
     }

@@ -42,7 +42,8 @@ namespace LittleBigBot.Services
             foreach (var method in methods.Where(m => !m.IsSpecialName))
             {
                 if (sb.Length > 1800) break;
-                sb.AppendLine($"[Name: {method.Name}, Return-Type: {method.ReturnType.Name}, Parameters: [{string.Join(", ", method.GetParameters().Select(a => $"({a.ParameterType.Name} {a.Name})"))}]]");
+                sb.AppendLine(
+                    $"[Name: {method.Name}, Return-Type: {method.ReturnType.Name}, Parameters: [{string.Join(", ", method.GetParameters().Select(a => $"({a.ParameterType.Name} {a.Name})"))}]]");
                 sb.AppendLine();
             }
 
@@ -64,7 +65,8 @@ namespace LittleBigBot.Services
                     value = finfo.GetValue(obj);
                     break;
                 default:
-                    throw new InvalidOperationException("GetValue(object, object): first parameter prop must be PropertyInfo or FieldInfo");
+                    throw new InvalidOperationException(
+                        "GetValue(object, object): first parameter prop must be PropertyInfo or FieldInfo");
             }
 
             if (value != null)
@@ -137,9 +139,15 @@ namespace LittleBigBot.Services
             return Format.Code(new StringBuilder()
                 .AppendLine("Inheritance graph for type [" + type.FullName + "]")
                 .AppendLine()
-                .AppendLine(string.Join("\n\n", parents.Select(ab => { return index++ + ") " + string.Join(" -> ", ab.Select(b => $"[{FormatType(b)}]")); })))
+                .AppendLine(string.Join("\n\n",
+                    parents.Select(ab =>
+                    {
+                        return index++ + ") " + string.Join(" -> ", ab.Select(b => $"[{FormatType(b)}]"));
+                    })))
                 .AppendLine()
-                .AppendLine(string.Join(" -> ", parents.Where(a => a.Any(b => !b.IsInterface)).Select(d => "[" + d.FirstOrDefault(bx => !bx.IsInterface)?.Name + "]")))
+                .AppendLine(string.Join(" -> ",
+                    parents.Where(a => a.Any(b => !b.IsInterface))
+                        .Select(d => "[" + d.FirstOrDefault(bx => !bx.IsInterface)?.Name + "]")))
                 .ToString(), "ini");
         }
 

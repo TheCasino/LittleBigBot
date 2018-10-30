@@ -10,7 +10,7 @@ namespace LittleBigBot.Services
 {
     [Name("Daemon")]
     [Description("Manages the running and uptime of the bot.")]
-    public sealed class DaemonService: BaseService
+    public sealed class DaemonService : BaseService
     {
         private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(30);
         private readonly DiscordSocketClient _discord;

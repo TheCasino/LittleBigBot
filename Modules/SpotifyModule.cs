@@ -25,7 +25,8 @@ using SpotifyAPI.Web.Models;
 namespace LittleBigBot.Modules
 {
     [Name("Spotify")]
-    [Description("Commands that relate to Spotify, a digital music service that gives you access to millions of songs.")]
+    [Description(
+        "Commands that relate to Spotify, a digital music service that gives you access to millions of songs.")]
     public class SpotifyModule : LittleBigBotModuleBase
     {
         public SpotifyService Spotify { get; set; }
@@ -33,7 +34,11 @@ namespace LittleBigBot.Modules
         [Command("Track", "Song", "GetSong", "GetTrack")]
         [Description("Searches the Spotify database for a song.")]
         [RunMode(RunMode.Parallel)]
-        public async Task<BaseResult> Command_TrackAsync([Name("Track Name")] [Description("The track to search for.")] [Remainder] [DefaultValueDescription("The track that you're currently listening to.")]
+        public async Task<BaseResult> Command_TrackAsync(
+            [Name("Track Name")]
+            [Description("The track to search for.")]
+            [Remainder]
+            [DefaultValueDescription("The track that you're currently listening to.")]
             string trackQuery = null)
         {
             FullTrack track;
@@ -42,26 +47,19 @@ namespace LittleBigBot.Modules
                 var tracks = await Spotify.RequestAsync(api => api.SearchItemsAsync(trackQuery, SearchType.Track));
 
                 if (tracks.Error != null)
-                {
                     return BadRequest($"Spotify returned error code {tracks.Error.Status}: {tracks.Error.Message}");
-                }
 
                 track = tracks.Tracks.Items.FirstOrDefault();
             }
             else
             {
                 if (!(Context.Invoker.Activity is SpotifyGame spot))
-                {
                     return BadRequest("You didn't supply a track, and you're not currently listening to anything!");
-                }
 
                 track = await Spotify.RequestAsync(a => a.GetTrackAsync(spot.TrackId));
             }
 
-            if (track == null)
-            {
-                return NotFound("Cannot find a track by that name.");
-            }
+            if (track == null) return NotFound("Cannot find a track by that name.");
 
             var embed = new EmbedBuilder
             {
@@ -79,12 +77,14 @@ namespace LittleBigBot.Modules
             var length = TimeSpan.FromMilliseconds(track.DurationMs);
 
             embed.AddField("Length", $"{length.Minutes} minutes, {length.Seconds} seconds", true);
-            embed.AddField("Release Date", DateTime.TryParse(track.Album.ReleaseDate, out var dt) ? dt.ToString("D") : track.Album.ReleaseDate, true);
+            embed.AddField("Release Date",
+                DateTime.TryParse(track.Album.ReleaseDate, out var dt) ? dt.ToString("D") : track.Album.ReleaseDate,
+                true);
             embed.AddField("Album", UrlHelper.CreateMarkdownUrl(track.Album.Name, track.Album.GetAlbumUrl()), true);
             embed.AddField("Is Explicit", track.Explicit ? "Yes" : "No", true);
 
             embed.AddField("\u200B", UrlHelper.CreateMarkdownUrl("Click to listen!", track.GetTrackUrl()));
-            
+
             return Ok(embed);
         }
 
@@ -93,15 +93,16 @@ namespace LittleBigBot.Modules
         [Thumbnail("https://i.imgur.com/d7HQlA9.png")]
         [RunMode(RunMode.Parallel)]
         public async Task<BaseResult> Command_GetSpotifyDataAsync(
-            [Name("User")] [Description("The user to get Spotify data for.")] [DefaultValueDescription("The user who invoked this command.")] [Remainder]
+            [Name("User")]
+            [Description("The user to get Spotify data for.")]
+            [DefaultValueDescription("The user who invoked this command.")]
+            [Remainder]
             SocketUser user = null)
         {
             user = user ?? Context.Invoker;
 
             if (user.Activity == null || !(user.Activity is SpotifyGame spotify))
-            {
                 return BadRequest("User is not listening to anything~!");
-            }
 
             var track = await Spotify.RequestAsync(a => a.GetTrackAsync(spotify.TrackId));
             var embed = new EmbedBuilder
@@ -109,7 +110,8 @@ namespace LittleBigBot.Modules
                 Color = LittleBigBot.DefaultEmbedColour,
                 Title = "Listening to Spotify",
                 Url = spotify.TrackUrl,
-                Description = $"{user} is listening to \"{track.Name}\" by {track.Artists.Select(a => a.Name).Humanize()}",
+                Description =
+                    $"{user} is listening to \"{track.Name}\" by {track.Artists.Select(a => a.Name).Humanize()}",
                 ThumbnailUrl = spotify.AlbumArtUrl,
                 Fields = new List<EmbedFieldBuilder>
                 {
@@ -128,7 +130,8 @@ namespace LittleBigBot.Modules
                     new EmbedFieldBuilder
                     {
                         Name = $"Artist{(track.Artists.Count == 1 ? "" : "s")}",
-                        Value = track.Artists.Select(a => UrlHelper.CreateMarkdownUrl(a.Name, a.GetArtistUrl())).Humanize(),
+                        Value = track.Artists.Select(a => UrlHelper.CreateMarkdownUrl(a.Name, a.GetArtistUrl()))
+                            .Humanize(),
                         IsInline = true
                     }
                 },
@@ -147,34 +150,33 @@ namespace LittleBigBot.Modules
         [Command("Album")]
         [Description("Searches the Spotify database for an album.")]
         [RunMode(RunMode.Parallel)]
-        public async Task<BaseResult> Command_SearchAlbumAsync([Name("Album Name")] [Description("The album name to search for.")] [Remainder] [DefaultValueDescription("The album of the track you're currently listening to.")]
+        public async Task<BaseResult> Command_SearchAlbumAsync(
+            [Name("Album Name")]
+            [Description("The album name to search for.")]
+            [Remainder]
+            [DefaultValueDescription("The album of the track you're currently listening to.")]
             string albumQuery = null)
         {
             FullAlbum album;
             if (albumQuery == null)
             {
                 if (!(Context.Invoker.Activity is SpotifyGame spot))
-                {
-                    return BadRequest("You didn't supply an album name, and you're not currently listening to anything!");
-                }
+                    return BadRequest(
+                        "You didn't supply an album name, and you're not currently listening to anything!");
 
-                album = await Spotify.RequestAsync(async ab => await ab.GetAlbumAsync((await Spotify.RequestAsync(a => a.GetTrackAsync(spot.TrackId))).Album.Id));
+                album = await Spotify.RequestAsync(async ab =>
+                    await ab.GetAlbumAsync((await Spotify.RequestAsync(a => a.GetTrackAsync(spot.TrackId))).Album.Id));
             }
             else
             {
                 var result = await Spotify.RequestAsync(a => a.SearchItemsAsync(albumQuery, SearchType.Album));
 
                 if (result.Error != null)
-                {
                     return BadRequest($"Spotify returned error code {result.Error.Status}: {result.Error.Message}");
-                }
 
                 var sa0 = result.Albums.Items.FirstOrDefault();
 
-                if (sa0 == null)
-                {
-                    return BadRequest("Cannot find album by that name.");
-                }
+                if (sa0 == null) return BadRequest("Cannot find album by that name.");
 
                 album = await Spotify.RequestAsync(a => a.GetAlbumAsync(sa0.Id));
             }
@@ -192,7 +194,9 @@ namespace LittleBigBot.Modules
                 ThumbnailUrl = album.Images.FirstOrDefault()?.Url,
                 Footer = new EmbedFooterBuilder
                 {
-                    Text = string.Join("\n", album.Copyrights.Distinct().Select(a => $"[{(a.Type == "C" ? "Copyright" : a.Type == "P" ? "Recording Copyright" : a.Type == "T" ? "Trademark" : a.Type == "R" ? "Registered Trademark" : a.Type)}] {a.Text}"))
+                    Text = string.Join("\n",
+                        album.Copyrights.Distinct().Select(a =>
+                            $"[{(a.Type == "C" ? "Copyright" : a.Type == "P" ? "Recording Copyright" : a.Type == "T" ? "Trademark" : a.Type == "R" ? "Registered Trademark" : a.Type)}] {a.Text}"))
                 }
             };
 
@@ -203,7 +207,8 @@ namespace LittleBigBot.Modules
             while (sb.Length < 2000 && curIndex < trackMax)
             {
                 var track = tracks[curIndex];
-                sb.AppendLine($"{curIndex + 1} - {UrlHelper.CreateMarkdownUrl(track.Name, track.GetTrackUrl())} by {track.Artists.Select(ab => ab.Name).Humanize()}");
+                sb.AppendLine(
+                    $"{curIndex + 1} - {UrlHelper.CreateMarkdownUrl(track.Name, track.GetTrackUrl())} by {track.Artists.Select(ab => ab.Name).Humanize()}");
                 curIndex++;
             }
 
@@ -211,7 +216,8 @@ namespace LittleBigBot.Modules
 
             embed.Description = sb.ToString();
 
-            embed.AddField("Release Date", DateTime.TryParse(album.ReleaseDate, out var dt) ? dt.ToString("D") : album.ReleaseDate, true);
+            embed.AddField("Release Date",
+                DateTime.TryParse(album.ReleaseDate, out var dt) ? dt.ToString("D") : album.ReleaseDate, true);
             if (album.Genres.Any()) embed.AddField("Genres", album.Genres.Humanize(), true);
             return Ok(embed);
         }

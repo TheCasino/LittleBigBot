@@ -29,11 +29,12 @@ namespace LittleBigBot.Services
         private readonly ILogger _commandsTracking;
         private readonly LittleBigBotConfig _config;
 
+        private readonly DiscordUserTypeParser<SocketGuildUser> _guildUserParser =
+            new DiscordUserTypeParser<SocketGuildUser>();
+
         private readonly ILogger<CommandHandlerService> _logger;
 
         private readonly IServiceProvider _services;
-
-        private readonly DiscordUserTypeParser<SocketGuildUser> _guildUserParser = new DiscordUserTypeParser<SocketGuildUser>();
         private readonly DiscordUserTypeParser<SocketUser> _userParser = new DiscordUserTypeParser<SocketUser>();
 
         public int CommandFailures;
@@ -62,7 +63,8 @@ namespace LittleBigBot.Services
             _commandService.AddTypeParser(_userParser);
 
             var modulesLoaded = await _commandService.AddModulesAsync(Assembly.GetEntryAssembly());
-            _logger.LogInformation($"{modulesLoaded.Count} total modules loaded | {modulesLoaded.Sum(a => a.Commands.Count)} total commands loaded | 2 type parsers loaded");
+            _logger.LogInformation(
+                $"{modulesLoaded.Count} total modules loaded | {modulesLoaded.Sum(a => a.Commands.Count)} total commands loaded | 2 type parsers loaded");
         }
 
         public override async Task DeinitializeAsync()
@@ -78,7 +80,6 @@ namespace LittleBigBot.Services
             var modulesUnloaded = 0;
 
             foreach (var module in _commandService.GetModules())
-            {
                 try
                 {
                     await _commandService.RemoveModuleAsync(module).ConfigureAwait(false);
@@ -88,12 +89,12 @@ namespace LittleBigBot.Services
                 {
                     // ignored
                 }
-            }
 
             _logger.LogInformation($"CommandService unloaded - unloaded {modulesUnloaded} modules.");
         }
 
-        private Task HandleMessageUpdateAsync(Cacheable<IMessage, ulong> cacheable, SocketMessage message, ISocketMessageChannel channel)
+        private Task HandleMessageUpdateAsync(Cacheable<IMessage, ulong> cacheable, SocketMessage message,
+            ISocketMessageChannel channel)
         {
             return HandleMessageAsync(message);
         }
@@ -107,29 +108,25 @@ namespace LittleBigBot.Services
             var baseResult = result.Cast<BaseResult>();
 
             if (baseResult.Content != null && !string.IsNullOrWhiteSpace(baseResult.Content))
-            {
                 await context.Channel.SendMessageAsync(baseResult.Content);
-            }
 
             foreach (var embed in baseResult.Embeds)
-            {
                 await context.Channel.SendMessageAsync(string.Empty, false, embed.Build());
-            }
 
             if (result is FailedBaseResult fbr)
-            {
                 LogCommandRuntimeFailure(context, command, fbr);
-            }
 
             else LogCommandSuccess(context, command);
         }
 
-        public Task HandleCommandExecutedAsync(Command command, CommandResult result, ICommandContext context, IServiceProvider arg4)
+        public Task HandleCommandExecutedAsync(Command command, CommandResult result, ICommandContext context,
+            IServiceProvider arg4)
         {
             return HandleCommandFinishedGlobalAsync(command, result, context.Cast<LittleBigBotExecutionContext>());
         }
 
-        private async Task HandleCommandErrorAsync(ExecutionFailedResult result, ICommandContext context0, IServiceProvider provider)
+        private async Task HandleCommandErrorAsync(ExecutionFailedResult result, ICommandContext context0,
+            IServiceProvider provider)
         {
             if (result.IsSuccessful) return; // Theoretically shouldn't ever happen?
 
@@ -155,7 +152,8 @@ namespace LittleBigBot.Services
                 },
                 Footer = new EmbedFooterBuilder
                 {
-                    Text = $"If you believe this error is not because of your input, please contact {(await _client.GetApplicationInfoAsync()).Owner}!"
+                    Text =
+                        $"If you believe this error is not because of your input, please contact {(await _client.GetApplicationInfoAsync()).Owner}!"
                 }
             };
             _commandsTracking.LogError(exception, context.FormatString(command) + " == DETAILS WILL FOLLOW ==");
@@ -174,15 +172,18 @@ namespace LittleBigBot.Services
             _commandsTracking.LogInformation(GenerateLogString(context, command) + " successfully");
         }
 
-        private void LogCommandGeneralFailure(LittleBigBotExecutionContext context, Command command, FailedResult failure)
+        private void LogCommandGeneralFailure(LittleBigBotExecutionContext context, Command command,
+            FailedResult failure)
         {
-            _commandsTracking.LogInformation(GenerateLogString(context, command) + $" unsuccessfully, with pre-run reason \"{failure.Reason}\"");
+            _commandsTracking.LogInformation(GenerateLogString(context, command) +
+                                             $" unsuccessfully, with pre-run reason \"{failure.Reason}\"");
         }
 
         private void LogCommandRuntimeFailure(LittleBigBotExecutionContext context, Command command,
             FailedBaseResult fbr)
         {
-            _commandsTracking.LogInformation(GenerateLogString(context, command) + $" unsuccessfully, with run-time reason \"{fbr.Content}\"");
+            _commandsTracking.LogInformation(GenerateLogString(context, command) +
+                                             $" unsuccessfully, with run-time reason \"{fbr.Content}\"");
         }
 
         private async Task HandleMessageAsync(SocketMessage incomingMessage)
@@ -195,13 +196,16 @@ namespace LittleBigBot.Services
 
             var argPos = 0;
 
-            if (!message.HasStringPrefix(_config.LittleBigBot.Prefix, ref argPos) && !message.HasMentionPrefix(_client.CurrentUser, ref argPos)) return;
+            if (!message.HasStringPrefix(_config.LittleBigBot.Prefix, ref argPos) &&
+                !message.HasMentionPrefix(_client.CurrentUser, ref argPos)) return;
 
             var context = new LittleBigBotExecutionContext(message, _services);
 
             try
             {
-                var result = await _commandService.ExecuteAsync(message.Content.Substring(argPos) /* Remove prefix from string */, context, _services);
+                var result =
+                    await _commandService.ExecuteAsync(
+                        message.Content.Substring(argPos) /* Remove prefix from string */, context, _services);
 
                 if (result.IsSuccessful) return;
 
@@ -214,21 +218,28 @@ namespace LittleBigBot.Services
                         return;
                     case ChecksFailedResult cfr:
                         command = cfr.Command;
-                        await context.Channel.SendMessageAsync($"The following check{(cfr.FailedChecks.Count == 0 ? "" : "s")} failed, so I couldn't execute the command: \n" + cfr.FailedChecks.Select(a => $"- {a.Error}").Join("\n"));
+                        await context.Channel.SendMessageAsync(
+                            $"The following check{(cfr.FailedChecks.Count == 0 ? "" : "s")} failed, so I couldn't execute the command: \n" +
+                            cfr.FailedChecks.Select(a => $"- {a.Error}").Join("\n"));
                         break;
                     case ParseFailedResult pfr:
                         command = pfr.Command;
                         if (pfr.ParseFailure == ParseFailure.TooFewArguments)
                         {
-                            await context.Channel.SendMessageAsync($"Sorry, but you didn't supply enough information for this command! Here is the command listing for `{pfr.Command.Aliases.First()}`:", false, HelpModule.CreateCommandEmbed(pfr.Command, context));
+                            await context.Channel.SendMessageAsync(
+                                $"Sorry, but you didn't supply enough information for this command! Here is the command listing for `{pfr.Command.Aliases.First()}`:",
+                                false, HelpModule.CreateCommandEmbed(pfr.Command, context));
                             break;
                         }
 
-                        await context.Channel.SendMessageAsync($"Parsing of your input failed: {pfr.ParseFailure.Humanize()}.");
+                        await context.Channel.SendMessageAsync(
+                            $"Parsing of your input failed: {pfr.ParseFailure.Humanize()}.");
                         break;
                     case TypeParserFailedResult tpfr:
                         command = tpfr.Parameter.Command;
-                        await context.Channel.SendMessageAsync($"Sorry, but \"{tpfr.Value}\" is not a valid form of {tpfr.Parameter.GetFriendlyName()}! Here is the command listing for `{tpfr.Parameter.Command.Aliases.First()}`:", false, HelpModule.CreateCommandEmbed(tpfr.Parameter.Command, context));
+                        await context.Channel.SendMessageAsync(
+                            $"Sorry, but \"{tpfr.Value}\" is not a valid form of {tpfr.Parameter.GetFriendlyName()}! Here is the command listing for `{tpfr.Parameter.Command.Aliases.First()}`:",
+                            false, HelpModule.CreateCommandEmbed(tpfr.Parameter.Command, context));
                         break;
                     case ExecutionFailedResult _:
                         return;

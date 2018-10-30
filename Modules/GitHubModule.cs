@@ -33,7 +33,8 @@ namespace LittleBigBot.Modules
         [Command("GHUser", "GitHubUser")]
         [RunMode(RunMode.Parallel)]
         [Cooldown(1, 3, CooldownMeasure.Seconds, CooldownType.User)]
-        public async Task<BaseResult> Command_GetGHUserAsync([Name("Username")] [Description("The username of the user to view.")]
+        public async Task<BaseResult> Command_GetGHUserAsync(
+            [Name("Username")] [Description("The username of the user to view.")]
             string username)
         {
             try
@@ -71,7 +72,8 @@ namespace LittleBigBot.Modules
         [RunMode(RunMode.Parallel)]
         [Description("Views a GitHub repository.")]
         [Cooldown(1, 3, CooldownMeasure.Seconds, CooldownType.User)]
-        public async Task<BaseResult> Command_GetGitHubRepoAsync([Name("Repo ID")] [Description("The repo ID of the repository to view.")]
+        public async Task<BaseResult> Command_GetGitHubRepoAsync(
+            [Name("Repo ID")] [Description("The repo ID of the repository to view.")]
             string repoLink = GitHubRepoOwner + "/" + GitHubRepoName)
         {
             var repoLinkParts = repoLink.Split("/");
@@ -80,9 +82,7 @@ namespace LittleBigBot.Modules
             var repoName = repoLinkParts.ElementAtOrDefault(1);
 
             if (string.IsNullOrWhiteSpace(repoOwner) || string.IsNullOrWhiteSpace(repoName))
-            {
                 return BadRequest("Invalid repository owner or name.");
-            }
 
             try
             {
@@ -99,13 +99,15 @@ namespace LittleBigBot.Modules
                     Description = repo.Description,
                     ThumbnailUrl = repo.Owner.AvatarUrl
                 };
-                embed.AddField("Language", string.IsNullOrWhiteSpace(repo.Language) ? "No Language" : repo.Language, true);
+                embed.AddField("Language", string.IsNullOrWhiteSpace(repo.Language) ? "No Language" : repo.Language,
+                    true);
                 if (repo.License != null) embed.AddField("License", repo.License.Name, true);
                 embed.AddField("Stargazers", repo.StargazersCount, true);
                 embed.AddField("Subscribers", repo.SubscribersCount, true);
                 embed.AddField("Created", repo.CreatedAt.ToUniversalTime().ToString("R"), true);
-                if (repo.PushedAt != null) embed.AddField("Last Push", repo.PushedAt?.ToUniversalTime().ToString("R"), true);
-                
+                if (repo.PushedAt != null)
+                    embed.AddField("Last Push", repo.PushedAt?.ToUniversalTime().ToString("R"), true);
+
                 return Ok(embed);
             }
             catch (NotFoundException)
@@ -119,14 +121,13 @@ namespace LittleBigBot.Modules
         [Description("Views all updates on the GH repo, or gets a commit by ID.")]
         [Cooldown(1, 3, CooldownMeasure.Seconds, CooldownType.User)]
         public async Task<BaseResult> Command_GetUpdateAsync([Name("Repo")] [Description("The repository to use.")]
-            string repo = GitHubRepoOwner + "/" + GitHubRepoName, [Name("Commit ID")] [Description("The ID of the commit to get.")] [DefaultValueDescription("Views the last three commits.")]
+            string repo = GitHubRepoOwner + "/" + GitHubRepoName, [Name("Commit ID")]
+            [Description("The ID of the commit to get.")]
+            [DefaultValueDescription("Views the last three commits.")]
             string updateId = null)
         {
             var repoParts = repo.Split("/");
-            if (repoParts.Length != 2)
-            {
-                return BadRequest("Invalid repository.");
-            }
+            if (repoParts.Length != 2) return BadRequest("Invalid repository.");
 
             var repoAuthor = repoParts.FirstOrDefault();
             var repoName = repoParts.ElementAtOrDefault(1);
@@ -135,14 +136,13 @@ namespace LittleBigBot.Modules
             {
                 if (updateId != null)
                 {
-                    if (updateId == "latest") updateId = (await GHClient.Repository.Commit.GetAll(repoAuthor, repoName)).FirstOrDefault()?.Sha;
+                    if (updateId == "latest")
+                        updateId = (await GHClient.Repository.Commit.GetAll(repoAuthor, repoName)).FirstOrDefault()
+                            ?.Sha;
 
                     var commit = await GHClient.Repository.Commit.Get(repoAuthor, repoName, updateId);
 
-                    if (commit == null)
-                    {
-                        return BadRequest($"Cannot find commit {updateId}.");
-                    }
+                    if (commit == null) return BadRequest($"Cannot find commit {updateId}.");
 
                     var commitEmbed = new EmbedBuilder();
                     commitEmbed.WithColor(LittleBigBot.DefaultEmbedColour);
@@ -161,13 +161,15 @@ namespace LittleBigBot.Modules
                     return Ok(commitEmbed);
                 }
 
-                var commits = await Task.WhenAll((await GHClient.Repository.Commit.GetAll(repoAuthor, repoName)).Take(3).Select(a => GHClient.Repository.Commit.Get(repoAuthor, repoName, a.Sha)));
+                var commits = await Task.WhenAll((await GHClient.Repository.Commit.GetAll(repoAuthor, repoName)).Take(3)
+                    .Select(a => GHClient.Repository.Commit.Get(repoAuthor, repoName, a.Sha)));
 
                 var embed = new EmbedBuilder();
                 embed.WithColor(LittleBigBot.DefaultEmbedColour);
-                embed.WithAuthor(a => a.WithIconUrl(Context.Client.CurrentUser.GetEffectiveAvatarUrl()).WithName("Recent Updates"));
+                embed.WithAuthor(a =>
+                    a.WithIconUrl(Context.Client.CurrentUser.GetEffectiveAvatarUrl()).WithName("Recent Updates"));
                 embed.WithDescription(string.Join("\n", commits.Select(FormatCommit)));
-                
+
                 return Ok(embed);
             }
             catch (RateLimitExceededException)
@@ -182,7 +184,8 @@ namespace LittleBigBot.Modules
 
         private string FormatCommit(GitHubCommit commit)
         {
-            return $"{UrlHelper.CreateMarkdownUrl(commit.Sha.Substring(0, 7), commit.HtmlUrl)}: {commit.Commit.Message} (author: {commit.Author.Login}, additions: {commit.Stats.Additions}, deletions: {commit.Stats.Deletions})";
+            return
+                $"{UrlHelper.CreateMarkdownUrl(commit.Sha.Substring(0, 7), commit.HtmlUrl)}: {commit.Commit.Message} (author: {commit.Author.Login}, additions: {commit.Stats.Additions}, deletions: {commit.Stats.Deletions})";
         }
     }
 }

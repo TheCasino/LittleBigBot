@@ -15,7 +15,9 @@ namespace LittleBigBot.Checks
             var owner = (await context.Client.GetApplicationInfoAsync()).Owner;
             var invokerId = context.Invoker.Id;
 
-            return owner.Id == invokerId ? CheckResult.Successful : new CheckResult($"This command can only be executed by my owner, `{owner}`!");
+            return owner.Id == invokerId
+                ? CheckResult.Successful
+                : new CheckResult($"This command can only be executed by my owner, `{owner}`!");
         }
     }
 }

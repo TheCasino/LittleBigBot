@@ -7,7 +7,7 @@ namespace LittleBigBot.Services
 {
     [Name("Interactive")]
     [Description("Provides utility functions to help with creating interactive commands.")]
-    public class InteractiveService: BaseService
+    public class InteractiveService : BaseService
     {
         public InteractiveService(DiscordSocketClient client)
         {
@@ -18,7 +18,8 @@ namespace LittleBigBot.Services
 
         public TimeSpan DefaultMessageTimeout => TimeSpan.FromSeconds(30);
 
-        public async Task<SocketUserMessage> WaitForMessageAsync(Func<SocketUserMessage, bool> predicate, TimeSpan? timeout = null)
+        public async Task<SocketUserMessage> WaitForMessageAsync(Func<SocketUserMessage, bool> predicate,
+            TimeSpan? timeout = null)
         {
             timeout = timeout ?? DefaultMessageTimeout;
 

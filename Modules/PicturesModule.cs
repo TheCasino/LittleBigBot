@@ -1,7 +1,5 @@
-using System;
 using System.Net;
 using System.Threading.Tasks;
-using Discord;
 using LittleBigBot.Checks;
 using LittleBigBot.Entities;
 using Newtonsoft.Json.Linq;

@@ -33,11 +33,13 @@ namespace LittleBigBot.Checks
                 var cperms = context.BotMember.GetPermissions(context.GuildChannel);
                 foreach (var gperm in _guildPermissions)
                     if (!context.BotMember.GuildPermissions.Has(gperm))
-                        return Task.FromResult(new CheckResult($"This command requires me to have the \"{gperm.Humanize()}\" server-level permission, but I do not have it!"));
+                        return Task.FromResult(new CheckResult(
+                            $"This command requires me to have the \"{gperm.Humanize()}\" server-level permission, but I do not have it!"));
 
                 foreach (var cperm in _channelPermissions)
                     if (!cperms.Has(cperm))
-                        return Task.FromResult(new CheckResult($"This command requires me to have the \"{cperm.Humanize()}\" channel-level permission, but I do not have it!"));
+                        return Task.FromResult(new CheckResult(
+                            $"This command requires me to have the \"{cperm.Humanize()}\" channel-level permission, but I do not have it!"));
             }
 
             return Task.FromResult(CheckResult.Successful);

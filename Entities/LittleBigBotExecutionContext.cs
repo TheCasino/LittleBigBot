@@ -22,7 +22,8 @@ namespace LittleBigBot.Entities
             Invoker = message.Author;
             InvokerMember = message.Author as SocketGuildUser;
             Channel = message.Channel;
-            Type = IsPrivate ? DiscordContextType.DM : GuildChannel != null ? DiscordContextType.Server : DiscordContextType.GroupDM;
+            Type = IsPrivate ? DiscordContextType.DM :
+                GuildChannel != null ? DiscordContextType.Server : DiscordContextType.GroupDM;
         }
 
         public bool IsPrivate => DmChannel != null;
@@ -41,7 +42,8 @@ namespace LittleBigBot.Entities
 
         public string FormatString(Command command)
         {
-            return $"Executing {command.Aliases.First()} for {Invoker} (ID {Invoker.Id}) in {(GuildChannel != null ? $"#{GuildChannel.Name} (ID {GuildChannel.Id})/{GuildChannel.Guild.Name} (ID {GuildChannel.Guild.Id})" : "their DM channel")}";
+            return
+                $"Executing {command.Aliases.First()} for {Invoker} (ID {Invoker.Id}) in {(GuildChannel != null ? $"#{GuildChannel.Name} (ID {GuildChannel.Id})/{GuildChannel.Guild.Name} (ID {GuildChannel.Guild.Id})" : "their DM channel")}";
         }
     }
 }

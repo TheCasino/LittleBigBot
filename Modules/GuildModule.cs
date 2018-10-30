@@ -1,9 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Discord;
-using Humanizer;
 using LittleBigBot.Checks;
 using LittleBigBot.Common;
 using LittleBigBot.Entities;

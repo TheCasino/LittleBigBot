@@ -60,7 +60,10 @@ namespace LittleBigBot.Common
 
         public static string GetFriendlyName(this Parameter info, bool isMultiple = false)
         {
-            return HelpModule.FriendlyNames.ContainsKey(info.Type) ? isMultiple ? HelpModule.FriendlyNames[info.Type].Multiple : HelpModule.FriendlyNames[info.Type].Singular : info.Type.Name;
+            return HelpModule.FriendlyNames.ContainsKey(info.Type)
+                ? isMultiple ? HelpModule.FriendlyNames[info.Type].Multiple :
+                HelpModule.FriendlyNames[info.Type].Singular
+                : info.Type.Name;
         }
     }
 }

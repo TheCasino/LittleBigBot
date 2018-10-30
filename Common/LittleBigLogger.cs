@@ -28,7 +28,8 @@ namespace LittleBigBot.Common
             _nlog = LogManager.GetLogger(categoryName);
         }
 
-        public void Log<TState>(MSLogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        public void Log<TState>(MSLogLevel logLevel, EventId eventId, TState state, Exception exception,
+            Func<TState, Exception, string> formatter)
         {
             var nlogLevel = LogLevelMap[logLevel];
 

@@ -29,9 +29,9 @@ namespace LittleBigBot
         private readonly DiscordSocketClient _client;
         private readonly CommandHandlerService _commandHandler;
         private readonly ILogger _discordLogger;
-        private readonly SpotifyService _spotify;
 
         private readonly ILogger<LittleBigBot> _logger;
+        private readonly SpotifyService _spotify;
 
         public LittleBigBot()
         {
@@ -54,12 +54,11 @@ namespace LittleBigBot
             webclient.Headers.Add("User-Agent", "LittleBigBot");
 
             var baseServiceType = typeof(BaseService);
-            var serviceTypes = Assembly.GetEntryAssembly().GetTypes().Where(a => baseServiceType.IsAssignableFrom(a) && a.GetCustomAttribute<DontAutoAddAttribute>() == null && !a.IsAbstract);
+            var serviceTypes = Assembly.GetEntryAssembly().GetTypes().Where(a =>
+                baseServiceType.IsAssignableFrom(a) && a.GetCustomAttribute<DontAutoAddAttribute>() == null &&
+                !a.IsAbstract);
 
-            foreach (var service in serviceTypes)
-            {
-                rootCollection.AddSingleton(service);
-            }
+            foreach (var service in serviceTypes) rootCollection.AddSingleton(service);
 
             return rootCollection
                 .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
@@ -87,7 +86,8 @@ namespace LittleBigBot
                 .AddLogging(log => { log.AddProvider(new LittleBigLoggingProvider()); })
                 .AddTransient<Random>()
                 .AddSingleton(webclient)
-                .AddSingleton(new GitHubClient(new ProductHeaderValue(configuration.GetSection("GitHub")["Username"]), new InMemoryCredentialStore(new Credentials(configuration.GetSection("GitHub")["Token"]))))
+                .AddSingleton(new GitHubClient(new ProductHeaderValue(configuration.GetSection("GitHub")["Username"]),
+                    new InMemoryCredentialStore(new Credentials(configuration.GetSection("GitHub")["Token"]))))
                 .AddSingleton(configuration)
                 .AddSingleton(this)
                 .Configure<LittleBigBotConfig>(configuration.Bind)

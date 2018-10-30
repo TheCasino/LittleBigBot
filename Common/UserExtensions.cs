@@ -15,7 +15,8 @@ namespace LittleBigBot.Common
             };
 
             if (user is IGuildUser guildUser)
-                builder.WithName($"{(guildUser.Nickname != null ? $"({guildUser.Nickname}) " : "")}{guildUser.Username}#{guildUser.Discriminator}");
+                builder.WithName(
+                    $"{(guildUser.Nickname != null ? $"({guildUser.Nickname}) " : "")}{guildUser.Username}#{guildUser.Discriminator}");
             else builder.WithName(user.ToString());
 
             return builder;

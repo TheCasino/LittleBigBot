@@ -10,7 +10,7 @@ namespace LittleBigBot.Services
     [Name("Spotify")]
     [Description("Provides access to Spotify's API resources.")]
     [DontAutoAdd]
-    public sealed class SpotifyService: BaseService
+    public sealed class SpotifyService : BaseService
     {
         public SpotifyService(ClientCredentialsAuth auth, SpotifyWebAPI api)
         {

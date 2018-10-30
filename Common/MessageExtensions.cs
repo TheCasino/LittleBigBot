@@ -24,7 +24,8 @@ namespace LittleBigBot.Common
             return false;
         }
 
-        public static bool HasStringPrefix(this IUserMessage msg, string str, ref int argPos, StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
+        public static bool HasStringPrefix(this IUserMessage msg, string str, ref int argPos,
+            StringComparison comparisonType = StringComparison.OrdinalIgnoreCase)
         {
             var text = msg.Content;
             if (text.StartsWith(str, comparisonType))

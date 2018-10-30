@@ -7,7 +7,9 @@ namespace LittleBigBot.Services
 {
     public class ScriptingResult
     {
-        private ScriptingResult(bool success = true, object returnValue = null, IEnumerable<Diagnostic> compilationDiagnostics = null, Exception exception = null, long compilationTime = -1, long executionTime = -1, ScriptStage failedStage = default)
+        private ScriptingResult(bool success = true, object returnValue = null,
+            IEnumerable<Diagnostic> compilationDiagnostics = null, Exception exception = null,
+            long compilationTime = -1, long executionTime = -1, ScriptStage failedStage = default)
         {
             ReturnValue = returnValue;
             IsSuccess = success;
@@ -27,19 +29,25 @@ namespace LittleBigBot.Services
         public long CompilationTime { get; }
         public long ExecutionTime { get; }
 
-        public static ScriptingResult FromSuccess(object returnValue, long compilationTime = -1, long executionTime = -1)
+        public static ScriptingResult FromSuccess(object returnValue, long compilationTime = -1,
+            long executionTime = -1)
         {
-            return new ScriptingResult(true, returnValue, executionTime: executionTime, compilationTime: compilationTime);
+            return new ScriptingResult(true, returnValue, executionTime: executionTime,
+                compilationTime: compilationTime);
         }
 
-        public static ScriptingResult FromError(IEnumerable<Diagnostic> diagnostics, ScriptStage failedStage, Exception exception = null, long compilationTime = -1, long executionTime = -1)
+        public static ScriptingResult FromError(IEnumerable<Diagnostic> diagnostics, ScriptStage failedStage,
+            Exception exception = null, long compilationTime = -1, long executionTime = -1)
         {
-            return new ScriptingResult(false, compilationDiagnostics: diagnostics, exception: exception, compilationTime: compilationTime, executionTime: executionTime);
+            return new ScriptingResult(false, compilationDiagnostics: diagnostics, exception: exception,
+                compilationTime: compilationTime, executionTime: executionTime);
         }
 
-        public static ScriptingResult FromError(Exception exception, ScriptStage failedStage, long compilationTime = -1, long executionTime = -1)
+        public static ScriptingResult FromError(Exception exception, ScriptStage failedStage, long compilationTime = -1,
+            long executionTime = -1)
         {
-            return new ScriptingResult(false, exception: exception, compilationTime: compilationTime, executionTime: executionTime);
+            return new ScriptingResult(false, exception: exception, compilationTime: compilationTime,
+                executionTime: executionTime);
         }
     }
 }

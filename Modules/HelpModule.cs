@@ -54,25 +54,29 @@ namespace LittleBigBot.Modules
         [Description("Shows you the current prefix.")]
         public Task<BaseResult> Command_ViewPrefixesAsync()
         {
-            return Task.FromResult(Ok($"The current prefix is ``{AppConfig.Value.LittleBigBot.Prefix}``.") as BaseResult);
+            return Task.FromResult(
+                Ok($"The current prefix is ``{AppConfig.Value.LittleBigBot.Prefix}``.") as BaseResult);
         }
 
         [Command("Help", "Commands")]
         [Description("Retrieves a list of commands that you can use.")]
-        [Remarks("Use `command <command name>` to see help on a specific command, or `module <module name>` for help on a specific module.")]
+        [Remarks(
+            "Use `command <command name>` to see help on a specific command, or `module <module name>` for help on a specific module.")]
         public async Task<BaseResult> Command_ListCommandsAsync()
         {
             var sb = new StringBuilder();
             sb
                 .AppendLine("**__LittleBigBot Commands__**")
                 .AppendLine("Here is a list of commands you can use.")
-                .AppendLine($"You can use `{AppConfig.Value.LittleBigBot.Prefix}help <command name>` to see help on a specific command, or `{AppConfig.Value.LittleBigBot.Prefix}module <module name>` to see help on a specific module.")
+                .AppendLine(
+                    $"You can use `{AppConfig.Value.LittleBigBot.Prefix}help <command name>` to see help on a specific command, or `{AppConfig.Value.LittleBigBot.Prefix}module <module name>` to see help on a specific module.")
                 .AppendLine();
 
             async Task AppendModules(IEnumerable<Module> modules, Module parent, int indent = -4)
             {
                 indent += 4;
-                foreach (var module in modules.Where(module => !module.HasAttribute<HiddenAttribute>() && (module.Parent == null || module.Parent == parent)))
+                foreach (var module in modules.Where(module =>
+                    !module.HasAttribute<HiddenAttribute>() && (module.Parent == null || module.Parent == parent)))
                 {
                     var list = new List<string>();
                     foreach (var command in module.Commands.Where(command => !command.HasAttribute<HiddenAttribute>()))
@@ -82,7 +86,8 @@ namespace LittleBigBot.Modules
                     }
 
                     var cr = string.Join(", ", list);
-                    sb.AppendLine(new string(' ', indent) + $"- **{module.Name}:** {(!list.Any() ? "<No commands available>" : cr)}");
+                    sb.AppendLine(new string(' ', indent) +
+                                  $"- **{module.Name}:** {(!list.Any() ? "<No commands available>" : cr)}");
                     await AppendModules(module.Submodules, module, indent + 4);
                 }
             }
@@ -110,12 +115,13 @@ namespace LittleBigBot.Modules
         public async Task<BaseResult> Command_GetModuleInfoAsync([Remainder] string query)
         {
             var module = CommandService.GetModules().Search(query.Replace("\"", ""));
-            if (module == null)
-            {
-                return NotFound($"No module found for `{query}`.");
-            }
+            if (module == null) return NotFound($"No module found for `{query}`.");
 
-            var embed = new EmbedBuilder {Timestamp = DateTimeOffset.Now, Color = LittleBigBot.DefaultEmbedColour, Title = $"Module '{module.Name}'"};
+            var embed = new EmbedBuilder
+            {
+                Timestamp = DateTimeOffset.Now, Color = LittleBigBot.DefaultEmbedColour,
+                Title = $"Module '{module.Name}'"
+            };
 
             if (!string.IsNullOrWhiteSpace(module.Description)) embed.Description = module.Description;
 
@@ -123,7 +129,10 @@ namespace LittleBigBot.Modules
 
             var commands = module.Commands.Where(a => !a.HasAttribute<HiddenAttribute>()).ToList();
 
-            embed.AddField("Commands", commands.Any() ? string.Join(", ", commands.Select(a => a.Aliases.FirstOrDefault())) + " (" + commands.Count + ")" : "None (all hidden)");
+            embed.AddField("Commands",
+                commands.Any()
+                    ? string.Join(", ", commands.Select(a => a.Aliases.FirstOrDefault())) + " (" + commands.Count + ")"
+                    : "None (all hidden)");
 
             return Ok(embed);
         }
@@ -144,7 +153,8 @@ namespace LittleBigBot.Modules
                     command.Parameters.Select(p => $"**{index++})** {FormatParameter(p)}").Join("\n"));
             if (command.Remarks != null) embed.AddField("Remarks", command.Remarks);
             embed.AddField("Usage", FormatUsageString(command, context.Services));
-            embed.WithFooter("You can use quotes to encapsulate inputs that are more than one word long.", context.Bot.GetEffectiveAvatarUrl());
+            embed.WithFooter("You can use quotes to encapsulate inputs that are more than one word long.",
+                context.Bot.GetEffectiveAvatarUrl());
 
             if (command.HasAttribute<ThumbnailAttribute>(out var imageUrlAttribute))
             {
@@ -162,10 +172,7 @@ namespace LittleBigBot.Modules
         public async Task<BaseResult> Command_GetCommandInfoAsync([Remainder] string query)
         {
             var search = CommandService.FindCommands(query).ToList();
-            if (!search.Any())
-            {
-                return NotFound($"No command found for `{query}`.");
-            }
+            if (!search.Any()) return NotFound($"No command found for `{query}`.");
 
             return Ok(search.Where(c => !c.Command.HasAttribute<HiddenAttribute>())
                 .Select(a => CreateCommandEmbed(a.Command, Context).ToEmbedBuilder()).ToArray());
@@ -175,7 +182,9 @@ namespace LittleBigBot.Modules
         {
             var fres = FriendlyNames.GetValueOrDefault(parameterInfo.Type);
 
-            var typename = parameterInfo.Type.IsEnum ? string.Join(", ", parameterInfo.Type.GetEnumNames()) : parameterInfo.Type.ToString();
+            var typename = parameterInfo.Type.IsEnum
+                ? string.Join(", ", parameterInfo.Type.GetEnumNames())
+                : parameterInfo.Type.ToString();
 
             var type = parameterInfo.IsMultiple ? fres.Multiple ?? typename : fres.Singular ?? typename;
 
@@ -189,7 +198,8 @@ namespace LittleBigBot.Modules
 
             sb.AppendLine();
 
-            if (!string.IsNullOrEmpty(parameterInfo.Description)) sb.AppendLine($"- Description: {parameterInfo.Description}");
+            if (!string.IsNullOrEmpty(parameterInfo.Description))
+                sb.AppendLine($"- Description: {parameterInfo.Description}");
 
             sb.AppendLine(
                 $"- Optional: {(parameterInfo.HasAttribute<ParameterArrayOptionalAttribute>() ? "Yes" : parameterInfo.IsOptional ? "Yes" : "No")}");
@@ -208,7 +218,8 @@ namespace LittleBigBot.Modules
 
         private static string FormatUsageString(Command command, IServiceProvider services)
         {
-            return $"`{services.GetRequiredService<IOptions<LittleBigBotConfig>>().Value.LittleBigBot.Prefix ?? services.GetRequiredService<DiscordSocketClient>().CurrentUser.Mention + " "}{command.Aliases.First()} {command.Parameters.Select(c => c.Name.Replace(" ", "_")).Join(" ")}`";
+            return
+                $"`{services.GetRequiredService<IOptions<LittleBigBotConfig>>().Value.LittleBigBot.Prefix ?? services.GetRequiredService<DiscordSocketClient>().CurrentUser.Mention + " "}{command.Aliases.First()} {command.Parameters.Select(c => c.Name.Replace(" ", "_")).Join(" ")}`";
         }
 
         public class TypeNamePair

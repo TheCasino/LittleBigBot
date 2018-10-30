@@ -28,13 +28,15 @@ namespace LittleBigBot.Modules
         [Command("Avatar", "GetAvatar", "Picture", "Ava", "Av", "Pfp")]
         [Description("Grabs the avatar for a user.")]
         public async Task<BaseResult> Command_GetAvatarAsync(
-            [Name("User")] [Description("The user who you wish to get the avatar for.")] [DefaultValueDescription("The user who invoked this command.")]
+            [Name("User")]
+            [Description("The user who you wish to get the avatar for.")]
+            [DefaultValueDescription("The user who invoked this command.")]
             SocketUser target = null,
             [Name("Image_Size")] [Description("The size of the resulting image.")]
             int size = 1024)
         {
             target = target ?? Context.Invoker;
-            
+
             return Ok(new EmbedBuilder
             {
                 Author = target.ToEmbedAuthorBuilder().WithName($"Avatar for {target}"),
@@ -45,7 +47,9 @@ namespace LittleBigBot.Modules
         [Command("User", "UserInfo", "SnoopOn", "GetUser")]
         [Description("Grabs information around a member.")]
         public async Task<BaseResult> Command_GetUserInfoAsync(
-            [Name("Member")] [Description("The user to get information for.")] [DefaultValueDescription("The user who invoked this command.")]
+            [Name("Member")]
+            [Description("The user to get information for.")]
+            [DefaultValueDescription("The user who invoked this command.")]
             SocketUser member = null)
         {
             member = member ?? Context.Invoker;
@@ -90,10 +94,7 @@ namespace LittleBigBot.Modules
         public async Task<BaseResult> Command_HugUserAsync([Name("Member")] [Description("The user to hug.")]
             SocketUser hugee)
         {
-            if (hugee.Id == Context.Invoker.Id)
-            {
-                return BadRequest("**You can't hug yourself! (Sadly)**");
-            }
+            if (hugee.Id == Context.Invoker.Id) return BadRequest("**You can't hug yourself! (Sadly)**");
 
             return Ok($"**{Context.Invoker.GetActualName()}** hugs **{hugee.GetActualName()}**!");
         }

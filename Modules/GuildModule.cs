@@ -93,7 +93,7 @@ namespace LittleBigBot.Modules
                 }
             };
 
-            return Task.FromResult<BaseResult>(Ok(embed));
+            return Result(Ok(embed));
         }
     }
 }

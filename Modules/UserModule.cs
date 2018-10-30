@@ -37,7 +37,7 @@ namespace LittleBigBot.Modules
         {
             target = target ?? Context.Invoker;
 
-            return Task.FromResult<BaseResult>(Ok(new EmbedBuilder
+            return Result(Ok(new EmbedBuilder
             {
                 Author = target.ToEmbedAuthorBuilder().WithName($"Avatar for {target}"),
                 ImageUrl = target.GetEffectiveAvatarUrl(Convert.ToUInt16(size))
@@ -86,7 +86,7 @@ namespace LittleBigBot.Modules
             embed.AddField("Status", member.Status.Humanize(), true);
             embed.AddField("Is Bot or Webhook", member.IsBot || member.IsWebhook, true);
 
-            return Task.FromResult<BaseResult>(Ok(embed));
+            return Result(Ok(embed));
         }
 
         [Command("Hug")]
@@ -94,9 +94,9 @@ namespace LittleBigBot.Modules
         public  Task<BaseResult> Command_HugUserAsync([Name("Member")] [Description("The user to hug.")]
             SocketUser hugee)
         {
-            if (hugee.Id == Context.Invoker.Id) return Task.FromResult<BaseResult>(BadRequest("**You can't hug yourself! (Sadly)**"));
+            if (hugee.Id == Context.Invoker.Id) return Result(BadRequest("**You can't hug yourself! (Sadly)**"));
 
-            return Task.FromResult<BaseResult>(Ok($"**{Context.Invoker.GetActualName()}** hugs **{hugee.GetActualName()}**!"));
+            return Result(Ok($"**{Context.Invoker.GetActualName()}** hugs **{hugee.GetActualName()}**!"));
         }
 
         public static string FormatOffset(DateTimeOffset offset)

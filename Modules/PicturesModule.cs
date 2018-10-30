@@ -24,12 +24,7 @@ namespace LittleBigBot.Modules
         {
             var url = JToken.Parse(await HttpApi.DownloadStringTaskAsync(BowsetteApi)).Value<string>("url");
 
-            return Ok(embed =>
-            {
-                embed.WithTitle("Here's your Bowsette, pervert.")
-                    .WithColor(LittleBigBot.DefaultEmbedColour)
-                    .WithImageUrl(url);
-            });
+            return ImageEmbed("Here's your bowsette image, pervert!", url);
         }
 
         [Command("Cat", "Meow")]
@@ -38,12 +33,7 @@ namespace LittleBigBot.Modules
         {
             var url = JToken.Parse(await HttpApi.DownloadStringTaskAsync(CatApi)).Value<string>("file");
 
-            return Ok(embed =>
-            {
-                embed.WithTitle("Meow~!")
-                    .WithColor(LittleBigBot.DefaultEmbedColour)
-                    .WithImageUrl(url);
-            });
+            return ImageEmbed("Meow~!", url);
         }
     }
 }

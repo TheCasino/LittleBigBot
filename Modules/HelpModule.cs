@@ -115,7 +115,7 @@ namespace LittleBigBot.Modules
         public Task<BaseResult> Command_GetModuleInfoAsync([Remainder] string query)
         {
             var module = CommandService.GetModules().Search(query.Replace("\"", ""));
-            if (module == null) return Task.FromResult<BaseResult>(NotFound($"No module found for `{query}`."));
+            if (module == null) return Result(NotFound($"No module found for `{query}`."));
 
             var embed = new EmbedBuilder
             {
@@ -134,7 +134,7 @@ namespace LittleBigBot.Modules
                     ? string.Join(", ", commands.Select(a => a.Aliases.FirstOrDefault())) + " (" + commands.Count + ")"
                     : "None (all hidden)");
 
-            return Task.FromResult<BaseResult>(Ok(embed));
+            return Result(Ok(embed));
         }
 
         public static Embed CreateCommandEmbed(Command command, LittleBigBotExecutionContext context)
@@ -172,9 +172,9 @@ namespace LittleBigBot.Modules
         public Task<BaseResult> Command_GetCommandInfoAsync([Remainder] string query)
         {
             var search = CommandService.FindCommands(query).ToList();
-            if (!search.Any()) return Task.FromResult<BaseResult>(NotFound($"No command found for `{query}`."));
+            if (!search.Any()) return Result(NotFound($"No command found for `{query}`."));
 
-            return Task.FromResult<BaseResult>(Ok(search.Where(c => !c.Command.HasAttribute<HiddenAttribute>())
+            return Result(Ok(search.Where(c => !c.Command.HasAttribute<HiddenAttribute>())
                 .Select(a => CreateCommandEmbed(a.Command, Context).ToEmbedBuilder()).ToArray()));
         }
 

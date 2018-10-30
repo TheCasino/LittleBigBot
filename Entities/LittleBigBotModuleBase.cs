@@ -63,6 +63,17 @@ namespace LittleBigBot.Entities
             return Ok(eb);
         }
 
+        protected Task<BaseResult> Result(BaseResult result)
+        {
+            return Task.FromResult(result);
+        }
+
+        protected OkResult ImageEmbed(string title, string imageUrl) => Ok(e =>
+        {
+            e.ImageUrl = imageUrl;
+            e.Title = title;
+        });
+
         protected BadRequestResult BadRequest(string error = null)
         {
             return new BadRequestResult(error);

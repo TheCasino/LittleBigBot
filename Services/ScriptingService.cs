@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,14 +10,13 @@ using LittleBigBot.Attributes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
-using Qmmands;
 
 namespace LittleBigBot.Services
 {
     [Service("Scripting", "Allows .NET Core/Roslyn API scripting.")]
     public sealed class ScriptingService : BaseService
     {
-        public static readonly List<string> Imports = new List<string>
+        public static readonly IReadOnlyList<string> Imports = new ReadOnlyCollection<string>(new List<string>
         {
             "System", "System.Math", "System.Linq", "Discord", "System.Diagnostics", "System.Collections.Generic",
             "Discord.WebSocket", "LittleBigBot", "LittleBigBot.Common", "LittleBigBot.Entities",
@@ -24,24 +24,20 @@ namespace LittleBigBot.Services
             "Microsoft.Extensions.DependencyInjection", "System.Text", "LittleBigBot.Services",
             "System.Globalization", "Microsoft.Extensions.Options",
             "LittleBigBot.Modules", "System.Reflection"
-        };
+        });
 
-        public async Task<ScriptingResult> EvaluateScriptAsync<T>(string code, T properties,
-            IEnumerable<string> additionalReferences = null)
+        public async Task<ScriptingResult> EvaluateScriptAsync<T>(string code, T properties)
         {
             if (string.IsNullOrWhiteSpace(code))
                 return ScriptingResult.FromError(
                     new ArgumentException("code parameter cannot be empty, null or whitespace", nameof(code)),
                     ScriptStage.Preprocessing);
 
-            var imports = Imports;
-            if (additionalReferences != null) imports.AddRange(additionalReferences);
-
             var options = ScriptOptions.Default
                 .WithReferences(typeof(IDiscordClient).Assembly)
                 .WithReferences(typeof(DiscordSocketClient).Assembly)
                 .WithReferences(typeof(LittleBigBot).Assembly)
-                .WithImports(imports);
+                .WithImports(Imports);
 
             var script = CSharpScript.Create(code, options, typeof(T));
 

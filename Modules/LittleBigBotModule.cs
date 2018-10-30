@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -51,7 +51,7 @@ namespace LittleBigBot.Modules
         [Description("Displays the time that this bot process has been running.")]
         public Task<BaseResult> Command_GetUptimeAsync()
         {
-            return Result(Ok($"**Uptime:** {(DateTime.Now - Process.GetCurrentProcess().StartTime).Humanize(20)}"));
+            return Ok($"**Uptime:** {(DateTime.Now - Process.GetCurrentProcess().StartTime).Humanize(20)}");
         }
 
         [Command("LittleBigBot", "Meta", "Info", "WhoAreYou", "About")]
@@ -161,13 +161,13 @@ namespace LittleBigBot.Modules
             if (user.Id == Context.Guild.OwnerId)
             {
                 embed.WithDescription("User is owner of server, and has all permissions");
-                return Result(Ok(embed));
+                return Ok(embed);
             }
 
             if (user.GuildPermissions.Administrator)
             {
                 embed.WithDescription("User has Administrator permission, and has all permissions");
-                return Result(Ok(embed));
+                return Ok(embed);
             }
 
             var guildPerms = user.GuildPermissions; // Get the user's permissions
@@ -188,7 +188,7 @@ namespace LittleBigBot.Modules
             var denyString = string.Join("\n", deny.Select(a => $"- {a.Item1}"));
             embed.AddField("Allowed", string.IsNullOrEmpty(allowString) ? "- None" : allowString, true);
             embed.AddField("Denied", string.Join("\n", string.IsNullOrEmpty(denyString) ? "- None" : denyString), true);
-            return Result(Ok(embed));
+            return Ok(embed);
         }
 
         [Command("HasPerm", "HavePerm", "HavePermission", "HasPermission")]
@@ -207,22 +207,21 @@ namespace LittleBigBot.Modules
                  a.Name.Humanize().Equals(permission, StringComparison.OrdinalIgnoreCase))).ToList();
             /* Get a list of all properties of Boolean type and that match either the permission specified, or match it   when humanized */
 
-            if (boolProps.Count == 0) return Result(BadRequest("Unknown permission :("));
+            if (boolProps.Count == 0) return BadRequest("Unknown permission :(");
 
             var perm = boolProps.First();
             var name = perm.Name.Humanize();
             var value = (bool) perm.GetValue(guildPerms);
 
-            return Result(Ok($"I have permission `{name}`: **{(value ? "Yes" : "No")}**"));
+            return Ok($"I have permission `{name}`: **{(value ? "Yes" : "No")}**");
         }
 
         [Command("Stats", "GInfo")]
         [Description("Retrieves statistics about the consumers of this bot.")]
         public Task<BaseResult> Command_ViewStatsAsync()
         {
-            return Result(Ok(
-                $"Total Users: {Context.Client.Guilds.SelectMany(a => a.Users).Select(a => a.Id).Distinct().Count()} | Total Guilds: {Context.Client.Guilds.Count}" +
-                $"\n{Format.Code(string.Join("\n\n", Context.Client.Guilds.Select(a => $"[Name: {a.Name}, ID: {a.Id}, Members: {a.MemberCount}, Owner: {a.Owner}]")), "ini")}"));
+            return Ok(
+                $"Total Users: {Context.Client.Guilds.SelectMany(a => a.Users).Select(a => a.Id).Distinct().Count()} | Total Guilds: {Context.Client.Guilds.Count}\n{Format.Code(string.Join("\n\n", Context.Client.Guilds.Select(a => $"[Name: {a.Name}, ID: {a.Id}, Members: {a.MemberCount}, Owner: {a.Owner}]")), "ini")}");
         }
 
         [Command("DevInfo", "DI", "Dev", "Dump")]
@@ -231,7 +230,7 @@ namespace LittleBigBot.Modules
         [RequireOwner]
         public Task<BaseResult> Command_MemoryDumpAsync()
         {
-            return Result(Ok(new StringBuilder()
+            return Ok(new StringBuilder()
                 .AppendLine("```json")
                 .AppendLine("== Core ==")
                 .AppendLine($"{Context.Client.Guilds.Count} guilds")
@@ -249,7 +248,7 @@ namespace LittleBigBot.Modules
                 .AppendLine($"System Name: {Environment.MachineName}")
                 .AppendLine($"CLR Version: {Environment.Version}")
                 .AppendLine($"Culture: {CultureInfo.InstalledUICulture.EnglishName}")
-                .AppendLine("```").ToString()));
+                .AppendLine("```").ToString());
         }
     }
 }

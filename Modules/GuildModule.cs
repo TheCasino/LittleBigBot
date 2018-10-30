@@ -93,7 +93,7 @@ namespace LittleBigBot.Modules
                 }
             };
 
-            return Result(Ok(embed));
+            return Ok(embed);
         }
     }
 }

@@ -176,7 +176,7 @@ namespace LittleBigBot.Modules
                 ? $"Cannot find timezone data for ``{timezone}``."
                 : $"**{tz.StandardName} ({timezoneIds})**: {FormatTimezone(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz))}";
 
-            return Result(Ok(content));
+            return Ok(content);
         }
 
         private static string FormatTimezone(DateTime time)

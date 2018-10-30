@@ -39,7 +39,7 @@ namespace LittleBigBot.Modules
                 return $"**`{name}`**: {value}";
             }
 
-            return Result(Ok(new StringBuilder()
+            return Ok(new StringBuilder()
                 .AppendLine(Stat("MESSAGE_CREATE", ApiStats.MessageCreate))
                 .AppendLine(Stat("MESSAGE_UPDATE", ApiStats.MessageUpdate))
                 .AppendLine(Stat("MESSAGE_DELETE", ApiStats.MessageDelete))
@@ -50,7 +50,7 @@ namespace LittleBigBot.Modules
                 .AppendLine(Stat("GUILD_UNAVAILABLE", ApiStats.GuildMadeUnavailable))
                 .AppendLine(Stat("Command Successes", Handler.CommandSuccesses))
                 .AppendLine(Stat("Command Failures", Handler.CommandFailures))
-                .ToString()));
+                .ToString());
         }
 
         [Command("Clean", "Wipe")]
@@ -281,10 +281,10 @@ namespace LittleBigBot.Modules
             {
                 var service = FindService(name);
                 if (service.Descriptor == null || service.Service == null)
-                    return Result(NotFound($"Cannot find a service called ``{name}``."));
+                    return Task.FromResult<BaseResult>(NotFound($"Cannot find a service called ``{name}``."));
                 var type = service.Service.GetType();
 
-                return Result(Ok(a =>
+                return Task.FromResult<BaseResult>(Ok(a =>
                 {
                     a.WithAuthor($"Service: {service.Descriptor.Name}", Context.Bot.GetEffectiveAvatarUrl());
                     a.WithDescription(service.Descriptor.Description);
@@ -299,7 +299,7 @@ namespace LittleBigBot.Modules
                 var matchingTypes = Assembly.GetEntryAssembly().GetTypes()
                     .Where(a => typeof(BaseService).IsAssignableFrom(a) && !a.IsAbstract).Select(service => service.GetCustomAttribute<ServiceAttribute>()).ToList();
 
-                return Result(Ok(a =>
+                return Task.FromResult<BaseResult>(Ok(a =>
                 {
                     a.WithAuthor("Service List");
                     a.WithDescription(string.Join(Environment.NewLine, matchingTypes.Select(type => $"- **{type.Name}**: {type.Description}")));

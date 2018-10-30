@@ -115,7 +115,7 @@ namespace LittleBigBot.Modules
         public Task<BaseResult> Command_GetModuleInfoAsync([Remainder] string query)
         {
             var module = CommandService.GetModules().Search(query.Replace("\"", ""));
-            if (module == null) return Result(NotFound($"No module found for `{query}`."));
+            if (module == null) return NotFound($"No module found for `{query}`.");
 
             var embed = new EmbedBuilder
             {
@@ -134,7 +134,7 @@ namespace LittleBigBot.Modules
                     ? string.Join(", ", commands.Select(a => a.Aliases.FirstOrDefault())) + " (" + commands.Count + ")"
                     : "None (all hidden)");
 
-            return Result(Ok(embed));
+            return Ok(embed);
         }
 
         public static Embed CreateCommandEmbed(Command command, LittleBigBotExecutionContext context)
@@ -172,10 +172,10 @@ namespace LittleBigBot.Modules
         public Task<BaseResult> Command_GetCommandInfoAsync([Remainder] string query)
         {
             var search = CommandService.FindCommands(query).ToList();
-            if (!search.Any()) return Result(NotFound($"No command found for `{query}`."));
+            if (!search.Any()) return NotFound($"No command found for `{query}`.");
 
-            return Result(Ok(search.Where(c => !c.Command.HasAttribute<HiddenAttribute>())
-                .Select(a => CreateCommandEmbed(a.Command, Context).ToEmbedBuilder()).ToArray()));
+            return Ok(search.Where(c => !c.Command.HasAttribute<HiddenAttribute>())
+                .Select(a => CreateCommandEmbed(a.Command, Context).ToEmbedBuilder()).ToArray());
         }
 
         private static string FormatParameter(Parameter parameterInfo)
@@ -219,7 +219,7 @@ namespace LittleBigBot.Modules
         private static string FormatUsageString(Command command, IServiceProvider services)
         {
             return
-                $"`{services.GetRequiredService<IOptions<LittleBigBotConfig>>().Value.LittleBigBot.Prefix ?? services.GetRequiredService<DiscordSocketClient>().CurrentUser.Mention + " "}{command.Aliases.First()} {string.Join(", ", command.Parameters.Select(c => c.Name.Replace(" ", "_")))}`";
+                $"`{services.GetRequiredService<IOptions<LittleBigBotConfig>>().Value.LittleBigBot.Prefix ?? services.GetRequiredService<DiscordSocketClient>().CurrentUser.Mention + " "}{command.Aliases.First()} {string.Join(" ", command.Parameters.Select(c => c.Name.Replace(" ", "_")))}`";
         }
 
         public class TypeNamePair

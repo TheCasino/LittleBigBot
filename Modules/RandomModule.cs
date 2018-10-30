@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -36,13 +36,13 @@ namespace LittleBigBot.Modules
             [ParameterArrayOptional] [Name("Blocked Users")] [Description("Users who will be skipped in the random selection.")]
             params SocketUser[] users)
         {
-            if (Context.IsPrivate) return Result(Ok($":heart: I ship **you** x **me**, {Context.Invoker.Username}! :heart:"));
+            if (Context.IsPrivate) return Ok($":heart: I ship **you** x **me**, {Context.Invoker.Username}! :heart:");
 
             var arr = users.ToList();
             var guildUsers = Context.Guild.Users.Where(a => arr.All(b => b.Id != a.Id) && !a.IsBot);
             var socketGuildUsers = guildUsers as SocketGuildUser[] ?? guildUsers.ToArray();
 
-            if (socketGuildUsers.Length < 2) return Result(Ok("This guild is too small, or you have ignored too many people!"));
+            if (socketGuildUsers.Length < 2) return Ok("This guild is too small, or you have ignored too many people!");
 
             SocketGuildUser GetRandomUser()
             {
@@ -55,8 +55,8 @@ namespace LittleBigBot.Modules
 
             while (member1 == member2) member1 = GetRandomUser();
 
-            return Result(Ok(
-                $":heart: I ship **{member1.Nickname ?? member1.Username}** x **{member2.Nickname ?? member2.Username}**! :heart:"));
+            return Ok(
+                $":heart: I ship **{member1.Nickname ?? member1.Username}** x **{member2.Nickname ?? member2.Username}**! :heart:");
         }
 
         [Command("Roll", "Dice", "RollDice")]
@@ -67,28 +67,28 @@ namespace LittleBigBot.Modules
             string dice = "6", [Name("Number of Dice")] [Description("The number of dice to roll.")]
             int numberOfDice = 1)
         {
-            if (numberOfDice < 1) return Result(BadRequest("You must ask me to roll at least one die!"));
+            if (numberOfDice < 1) return BadRequest("You must ask me to roll at least one die!");
 
-            if (numberOfDice > 100) return Result(BadRequest("Sorry! No more than 100 dice rolls at once, please!"));
+            if (numberOfDice > 100) return BadRequest("Sorry! No more than 100 dice rolls at once, please!");
 
             if (!dice.Contains("d" /* No dice */) && int.TryParse(dice, out var diceParsed))
             {
-                if (diceParsed < 1) return Result(BadRequest("Your dice roll must be 1 or above!"));
+                if (diceParsed < 1) return BadRequest("Your dice roll must be 1 or above!");
 
                 if (numberOfDice == 1)
-                    return Result(Ok($"I rolled **{Random.Next(1, diceParsed)}** on a **{dice}**-sided die."));
+                    return Ok($"I rolled **{Random.Next(1, diceParsed)}** on a **{dice}**-sided die.");
 
-                return Result(Ok(string.Join("\n", Enumerable.Range(1, numberOfDice).Select(a => $"- **Die {a}:** {Random.Next(1, diceParsed)}"))));
+                return Ok(string.Join("\n", Enumerable.Range(1, numberOfDice).Select(a => $"- **Die {a}:** {Random.Next(1, diceParsed)}")));
             }
 
             try
             {
-                return Result(Ok(string.Join("\n", Enumerable.Range(1, numberOfDice)
-                    .Select(a => $"- **Die {a}:** {DiceExpression.Evaluate(dice)}"))));
+                return Ok(string.Join("\n", Enumerable.Range(1, numberOfDice)
+                    .Select(a => $"- **Die {a}:** {DiceExpression.Evaluate(dice)}")));
             }
             catch (ArgumentException)
             {
-                return Result(BadRequest("Invalid dice!"));
+                return BadRequest("Invalid dice!");
             }
         }
 
@@ -100,8 +100,8 @@ namespace LittleBigBot.Modules
             attribute = attribute.Replace("?", ".");
             var username = target is SocketGuildUser u ? u.Nickname ?? u.Username : target.Username;
 
-            return Result(Ok(
-                $"{(@is ? "Yes" : "No")}, {username} is {(@is ? "" : "not ")}{attribute}{(attribute.EndsWith(".") ? "" : ".")}"));
+            return Ok(
+                $"{(@is ? "Yes" : "No")}, {username} is {(@is ? "" : "not ")}{attribute}{(attribute.EndsWith(".") ? "" : ".")}");
         }
 
         [Command("Does")]
@@ -112,8 +112,8 @@ namespace LittleBigBot.Modules
             attribute = attribute.Replace("?", ".");
             var username = target is SocketGuildUser u ? u.Nickname ?? u.Username : target.Username;
 
-            return Result(Ok(
-                $"{(does ? "Yes" : "No")}, {username} does {(does ? "" : "not ")}{attribute}{(attribute.EndsWith(".") ? "" : ".")}"));
+            return Ok(
+                $"{(does ? "Yes" : "No")}, {username} does {(does ? "" : "not ")}{attribute}{(attribute.EndsWith(".") ? "" : ".")}");
         }
 
         [Command("Choose", "Pick")]
@@ -122,10 +122,10 @@ namespace LittleBigBot.Modules
             [Name("Options")] [Description("The options to choose from.")]
             params string[] options)
         {
-            if (options.Length == 0) return Result(BadRequest("You have to give me options to pick from!"));
+            if (options.Length == 0) return BadRequest("You have to give me options to pick from!");
 
             var roll = Random.Next(0, options.Length);
-            return Result(Ok($"I choose **{options[roll]}**."));
+            return Ok($"I choose **{options[roll]}**.");
         }
 
         public class DiceExpression

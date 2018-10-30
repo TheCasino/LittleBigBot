@@ -16,9 +16,6 @@ using Microsoft.Extensions.Options;
 using Octokit;
 using Octokit.Internal;
 using Qmmands;
-using SpotifyAPI.Web;
-using SpotifyAPI.Web.Auth;
-using SpotifyAPI.Web.Enums;
 
 namespace LittleBigBot
 {

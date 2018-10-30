@@ -112,10 +112,10 @@ namespace LittleBigBot.Modules
         [Command("Module", "ModuleInfo", "MInfo", "M")]
         [Description("Displays information about a LittleBigBot module.")]
         [Remarks("You can use the 'Help <command>' command for more information about a specific command.")]
-        public async Task<BaseResult> Command_GetModuleInfoAsync([Remainder] string query)
+        public Task<BaseResult> Command_GetModuleInfoAsync([Remainder] string query)
         {
             var module = CommandService.GetModules().Search(query.Replace("\"", ""));
-            if (module == null) return NotFound($"No module found for `{query}`.");
+            if (module == null) return Task.FromResult<BaseResult>(NotFound($"No module found for `{query}`."));
 
             var embed = new EmbedBuilder
             {
@@ -134,7 +134,7 @@ namespace LittleBigBot.Modules
                     ? string.Join(", ", commands.Select(a => a.Aliases.FirstOrDefault())) + " (" + commands.Count + ")"
                     : "None (all hidden)");
 
-            return Ok(embed);
+            return Task.FromResult<BaseResult>(Ok(embed));
         }
 
         public static Embed CreateCommandEmbed(Command command, LittleBigBotExecutionContext context)
@@ -146,11 +146,11 @@ namespace LittleBigBot.Modules
                 Description = string.IsNullOrEmpty(command.Description) ? "None" : command.Description,
                 Timestamp = DateTimeOffset.Now
             };
-            embed.AddField("Aliases", command.Aliases.Join(", "), true);
+            embed.AddField("Aliases", string.Join(", ", command.Aliases), true);
             var index = 1;
             if (command.Parameters.Any())
                 embed.AddField("Parameters",
-                    command.Parameters.Select(p => $"**{index++})** {FormatParameter(p)}").Join("\n"));
+                    string.Join("\n", command.Parameters.Select(p => $"**{index++})** {FormatParameter(p)}")));
             if (command.Remarks != null) embed.AddField("Remarks", command.Remarks);
             embed.AddField("Usage", FormatUsageString(command, context.Services));
             embed.WithFooter("You can use quotes to encapsulate inputs that are more than one word long.",
@@ -169,13 +169,13 @@ namespace LittleBigBot.Modules
         [Command("Help", "CommandInfo", "CInfo", "C")]
         [Description("Displays information about a LittleBigBot command.")]
         [Remarks("You can use the 'Module' command for more information about a specific module.")]
-        public async Task<BaseResult> Command_GetCommandInfoAsync([Remainder] string query)
+        public Task<BaseResult> Command_GetCommandInfoAsync([Remainder] string query)
         {
             var search = CommandService.FindCommands(query).ToList();
-            if (!search.Any()) return NotFound($"No command found for `{query}`.");
+            if (!search.Any()) return Task.FromResult<BaseResult>(NotFound($"No command found for `{query}`."));
 
-            return Ok(search.Where(c => !c.Command.HasAttribute<HiddenAttribute>())
-                .Select(a => CreateCommandEmbed(a.Command, Context).ToEmbedBuilder()).ToArray());
+            return Task.FromResult<BaseResult>(Ok(search.Where(c => !c.Command.HasAttribute<HiddenAttribute>())
+                .Select(a => CreateCommandEmbed(a.Command, Context).ToEmbedBuilder()).ToArray()));
         }
 
         private static string FormatParameter(Parameter parameterInfo)
@@ -219,7 +219,7 @@ namespace LittleBigBot.Modules
         private static string FormatUsageString(Command command, IServiceProvider services)
         {
             return
-                $"`{services.GetRequiredService<IOptions<LittleBigBotConfig>>().Value.LittleBigBot.Prefix ?? services.GetRequiredService<DiscordSocketClient>().CurrentUser.Mention + " "}{command.Aliases.First()} {command.Parameters.Select(c => c.Name.Replace(" ", "_")).Join(" ")}`";
+                $"`{services.GetRequiredService<IOptions<LittleBigBotConfig>>().Value.LittleBigBot.Prefix ?? services.GetRequiredService<DiscordSocketClient>().CurrentUser.Mention + " "}{command.Aliases.First()} {string.Join(", ", command.Parameters.Select(c => c.Name.Replace(" ", "_")))}`";
         }
 
         public class TypeNamePair

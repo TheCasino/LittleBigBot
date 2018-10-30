@@ -27,7 +27,7 @@ namespace LittleBigBot.Modules
     {
         [Command("Avatar", "GetAvatar", "Picture", "Ava", "Av", "Pfp")]
         [Description("Grabs the avatar for a user.")]
-        public async Task<BaseResult> Command_GetAvatarAsync(
+        public Task<BaseResult> Command_GetAvatarAsync(
             [Name("User")]
             [Description("The user who you wish to get the avatar for.")]
             [DefaultValueDescription("The user who invoked this command.")]
@@ -37,16 +37,16 @@ namespace LittleBigBot.Modules
         {
             target = target ?? Context.Invoker;
 
-            return Ok(new EmbedBuilder
+            return Task.FromResult<BaseResult>(Ok(new EmbedBuilder
             {
                 Author = target.ToEmbedAuthorBuilder().WithName($"Avatar for {target}"),
                 ImageUrl = target.GetEffectiveAvatarUrl(Convert.ToUInt16(size))
-            });
+            }));
         }
 
         [Command("User", "UserInfo", "SnoopOn", "GetUser")]
         [Description("Grabs information around a member.")]
-        public async Task<BaseResult> Command_GetUserInfoAsync(
+        public Task<BaseResult> Command_GetUserInfoAsync(
             [Name("Member")]
             [Description("The user to get information for.")]
             [DefaultValueDescription("The user who invoked this command.")]
@@ -77,7 +77,7 @@ namespace LittleBigBot.Modules
                 var roles = guildUser.Roles.Where(r => !r.IsEveryone);
                 var socketRoles = roles as SocketRole[] ?? roles.ToArray();
                 if (socketRoles.Length != 0)
-                    embed.AddField("Roles", socketRoles.Select(r => r.Name).Join(", "));
+                    embed.AddField("Roles", string.Join(", ", socketRoles.Select(r => r.Name)));
             }
 
             if (member.Activity != null)
@@ -86,17 +86,17 @@ namespace LittleBigBot.Modules
             embed.AddField("Status", member.Status.Humanize(), true);
             embed.AddField("Is Bot or Webhook", member.IsBot || member.IsWebhook, true);
 
-            return Ok(embed);
+            return Task.FromResult<BaseResult>(Ok(embed));
         }
 
         [Command("Hug")]
         [Description("Gives them all your hugging potential.")]
-        public async Task<BaseResult> Command_HugUserAsync([Name("Member")] [Description("The user to hug.")]
+        public  Task<BaseResult> Command_HugUserAsync([Name("Member")] [Description("The user to hug.")]
             SocketUser hugee)
         {
-            if (hugee.Id == Context.Invoker.Id) return BadRequest("**You can't hug yourself! (Sadly)**");
+            if (hugee.Id == Context.Invoker.Id) return Task.FromResult<BaseResult>(BadRequest("**You can't hug yourself! (Sadly)**"));
 
-            return Ok($"**{Context.Invoker.GetActualName()}** hugs **{hugee.GetActualName()}**!");
+            return Task.FromResult<BaseResult>(Ok($"**{Context.Invoker.GetActualName()}** hugs **{hugee.GetActualName()}**!"));
         }
 
         public static string FormatOffset(DateTimeOffset offset)

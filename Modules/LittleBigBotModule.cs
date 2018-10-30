@@ -49,9 +49,9 @@ namespace LittleBigBot.Modules
 
         [Command("Uptime")]
         [Description("Displays the time that this bot process has been running.")]
-        public async Task<BaseResult> Command_GetUptimeAsync()
+        public Task<BaseResult> Command_GetUptimeAsync()
         {
-            return Ok($"**Uptime:** {(DateTime.Now - Process.GetCurrentProcess().StartTime).Humanize(20)}");
+            return Task.FromResult<BaseResult>(Ok($"**Uptime:** {(DateTime.Now - Process.GetCurrentProcess().StartTime).Humanize(20)}"));
         }
 
         [Command("LittleBigBot", "Meta", "Info", "WhoAreYou", "About")]
@@ -148,7 +148,7 @@ namespace LittleBigBot.Modules
         [Command("Permissions", "Perms", "PermList", "PermsList", "ListPerms")]
         [Description("Shows a list of a user's current guild-level permissions.")]
         [RequireDiscordContext(DiscordContextType.Server)]
-        public async Task<BaseResult> Command_ShowPermissionsAsync(
+        public Task<BaseResult> Command_ShowPermissionsAsync(
             [Name("Target")]
             [Description("The user to get permissions for.")]
             [DefaultValueDescription("The user who invoked this command.")]
@@ -163,13 +163,13 @@ namespace LittleBigBot.Modules
             if (user.Id == Context.Guild.OwnerId)
             {
                 embed.WithDescription("User is owner of server, and has all permissions");
-                return Ok(embed);
+                return Task.FromResult<BaseResult>(Ok(embed));
             }
 
             if (user.GuildPermissions.Administrator)
             {
                 embed.WithDescription("User has Administrator permission, and has all permissions");
-                return Ok(embed);
+                return Task.FromResult<BaseResult>(Ok(embed));
             }
 
             var guildPerms = user.GuildPermissions; // Get the user's permissions
@@ -190,13 +190,13 @@ namespace LittleBigBot.Modules
             var denyString = string.Join("\n", deny.Select(a => $"- {a.Item1}"));
             embed.AddField("Allowed", string.IsNullOrEmpty(allowString) ? "- None" : allowString, true);
             embed.AddField("Denied", string.Join("\n", string.IsNullOrEmpty(denyString) ? "- None" : denyString), true);
-            return Ok(embed);
+            return Task.FromResult<BaseResult>(Ok(embed));
         }
 
         [Command("HasPerm", "HavePerm", "HavePermission", "HasPermission")]
         [Description("Checks if I have a permission accepted.")]
         [RequireDiscordContext(DiscordContextType.Server)]
-        public async Task<BaseResult> Command_HasPermissionAsync(
+        public Task<BaseResult> Command_HasPermissionAsync(
             [Name("Permission")] [Remainder] [Description("The permission to check for.")]
             string permission)
         {
@@ -209,30 +209,31 @@ namespace LittleBigBot.Modules
                  a.Name.Humanize().Equals(permission, StringComparison.OrdinalIgnoreCase))).ToList();
             /* Get a list of all properties of Boolean type and that match either the permission specified, or match it   when humanized */
 
-            if (boolProps.Count == 0) return BadRequest("Unknown permission :(");
+            if (boolProps.Count == 0) return Task.FromResult<BaseResult>(BadRequest("Unknown permission :("));
 
             var perm = boolProps.First();
             var name = perm.Name.Humanize();
             var value = (bool) perm.GetValue(guildPerms);
 
-            return Ok($"I have permission `{name}`: **{(value ? "Yes" : "No")}**");
+            return Task.FromResult<BaseResult>(Ok($"I have permission `{name}`: **{(value ? "Yes" : "No")}**"));
         }
 
         [Command("Stats", "GInfo")]
         [Description("Retrieves statistics about the consumers of this bot.")]
-        public async Task<BaseResult> Command_ViewStatsAsync()
+        public Task<BaseResult> Command_ViewStatsAsync()
         {
-            return Ok(
-                $"Total Users: {Context.Client.Guilds.SelectMany(a => a.Users).Select(a => a.Id).Distinct().Count()} | Total Guilds: {Context.Client.Guilds.Count}\n{Format.Code(string.Join("\n\n", Context.Client.Guilds.Select(a => $"[Name: {a.Name}, ID: {a.Id}, Members: {a.MemberCount}, Owner: {a.Owner}]")), "ini")}");
+            return Task.FromResult<BaseResult>(Ok(
+                $"Total Users: {Context.Client.Guilds.SelectMany(a => a.Users).Select(a => a.Id).Distinct().Count()} | Total Guilds: {Context.Client.Guilds.Count}" +
+                $"\n{Format.Code(string.Join("\n\n", Context.Client.Guilds.Select(a => $"[Name: {a.Name}, ID: {a.Id}, Members: {a.MemberCount}, Owner: {a.Owner}]")), "ini")}"));
         }
 
         [Command("DevInfo", "DI", "Dev", "Dump")]
         [Description(
             "Dumps current information about the client, the commands system and the current execution environment.")]
         [RequireOwner]
-        public async Task<BaseResult> Command_MemoryDumpAsync()
+        public Task<BaseResult> Command_MemoryDumpAsync()
         {
-            return Ok(new StringBuilder()
+            return Task.FromResult<BaseResult>(Ok(new StringBuilder()
                 .AppendLine("```json")
                 .AppendLine("== Core ==")
                 .AppendLine($"{Context.Client.Guilds.Count} guilds")
@@ -250,7 +251,7 @@ namespace LittleBigBot.Modules
                 .AppendLine($"System Name: {Environment.MachineName}")
                 .AppendLine($"CLR Version: {Environment.Version}")
                 .AppendLine($"Culture: {CultureInfo.InstalledUICulture.EnglishName}")
-                .AppendLine("```").ToString());
+                .AppendLine("```").ToString()));
         }
     }
 }

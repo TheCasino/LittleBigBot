@@ -60,7 +60,7 @@ namespace LittleBigBot.Modules
         {
             try
             {
-                _ = Context.Message.DeleteAsync();
+                Context.Message.DeleteAsync().ConfigureAwait(false);
             }
             catch (Exception)
             {
@@ -137,7 +137,7 @@ namespace LittleBigBot.Modules
         [Description("Displays the current time in a specific timezone.")]
         [Remarks(
             "This command is difficult and unwieldly to use, because timezone data changes depending on the host platform for the bot.")]
-        public async Task<BaseResult> Command_GetTimeAsync(
+        public Task<BaseResult> Command_GetTimeAsync(
             [Name("Timezone")]
             [Description("The timezone to view time data for.")]
             [DefaultValueDescription("The bot will show you a list of all timezones available on the system.")]
@@ -179,7 +179,7 @@ namespace LittleBigBot.Modules
                 ? $"Cannot find timezone data for ``{timezone}``."
                 : $"**{tz.StandardName} ({timezoneIds})**: {FormatTimezone(TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz))}";
 
-            return Ok(content);
+            return Task.FromResult<BaseResult>(Ok(content));
         }
 
         private static string FormatTimezone(DateTime time)

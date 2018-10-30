@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using LittleBigBot.Attributes;
-using Microsoft.Extensions.DependencyInjection;
-using Qmmands;
 
 namespace LittleBigBot.Services
 {

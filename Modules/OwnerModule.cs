@@ -32,14 +32,14 @@ namespace LittleBigBot.Modules
 
         [Command("ApiStats")]
         [Description("Views API statistics for the current session.")]
-        public async Task<BaseResult> Command_ViewApiStatsAsync()
+        public Task<BaseResult> Command_ViewApiStatsAsync()
         {
             string Stat(string name, object value)
             {
                 return $"**`{name}`**: {value}";
             }
 
-            return Ok(new StringBuilder()
+            return Task.FromResult<BaseResult>(Ok(new StringBuilder()
                 .AppendLine(Stat("MESSAGE_CREATE", ApiStats.MessageCreate))
                 .AppendLine(Stat("MESSAGE_UPDATE", ApiStats.MessageUpdate))
                 .AppendLine(Stat("MESSAGE_DELETE", ApiStats.MessageDelete))
@@ -50,7 +50,7 @@ namespace LittleBigBot.Modules
                 .AppendLine(Stat("GUILD_UNAVAILABLE", ApiStats.GuildMadeUnavailable))
                 .AppendLine(Stat("Command Successes", Handler.CommandSuccesses))
                 .AppendLine(Stat("Command Failures", Handler.CommandFailures))
-                .ToString());
+                .ToString()));
         }
 
         [Command("Clean", "Wipe")]

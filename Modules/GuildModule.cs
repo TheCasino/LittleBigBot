@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using LittleBigBot.Checks;
-using LittleBigBot.Common;
 using LittleBigBot.Entities;
 using LittleBigBot.Results;
 using Qmmands;
@@ -52,7 +51,7 @@ namespace LittleBigBot.Modules
         [Command("Server", "ServerInfo", "Guild", "GuildInfo")]
         [Description("Grabs information around this server.")]
         [RequireDiscordContext(DiscordContextType.Server)]
-        public async Task<BaseResult> Command_GuildInfoAsync()
+        public Task<BaseResult> Command_GuildInfoAsync()
         {
             var embed = new EmbedBuilder
             {
@@ -80,21 +79,21 @@ namespace LittleBigBot.Modules
                     new EmbedFieldBuilder
                     {
                         Name = "Channels",
-                        Value = Context.Guild.Channels.Select(c => c.Name).Join(", ") + " (" +
+                        Value = string.Join(", ", Context.Guild.Channels.Select(c => c.Name)) + " (" +
                                 Context.Guild.Channels.Count + ")",
                         IsInline = true
                     },
                     new EmbedFieldBuilder
                     {
                         Name = "Voice Channels",
-                        Value = Context.Guild.VoiceChannels.Select(vc => vc.Name).Join(", ") + " (" +
+                        Value = string.Join(", ", Context.Guild.VoiceChannels.Select(vc => vc.Name)) + " (" +
                                 Context.Guild.VoiceChannels.Count + ")",
                         IsInline = true
                     }
                 }
             };
 
-            return Ok(embed);
+            return Task.FromResult<BaseResult>(Ok(embed));
         }
     }
 }

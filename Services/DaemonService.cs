@@ -5,7 +5,6 @@ using Discord;
 using Discord.WebSocket;
 using LittleBigBot.Attributes;
 using Microsoft.Extensions.Logging;
-using Qmmands;
 
 namespace LittleBigBot.Services
 {

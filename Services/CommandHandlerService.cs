@@ -220,7 +220,7 @@ namespace LittleBigBot.Services
                         command = cfr.Command;
                         await context.Channel.SendMessageAsync(
                             $"The following check{(cfr.FailedChecks.Count == 0 ? "" : "s")} failed, so I couldn't execute the command: \n" +
-                            cfr.FailedChecks.Select(a => $"- {a.Error}").Join("\n"));
+                            string.Join("\n", cfr.FailedChecks.Select(a => $"- {a.Error}")));
                         break;
                     case ParseFailedResult pfr:
                         command = pfr.Command;

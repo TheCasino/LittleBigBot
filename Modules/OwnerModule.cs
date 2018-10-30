@@ -15,7 +15,7 @@ using LittleBigBot.Results;
 using LittleBigBot.Services;
 using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
-using NLog;
+using Microsoft.Extensions.Logging;
 using Qmmands;
 
 namespace LittleBigBot.Modules
@@ -29,6 +29,7 @@ namespace LittleBigBot.Modules
         public IServiceProvider Services { get; set; }
         public ApiStatsService ApiStats { get; set; }
         public CommandHandlerService Handler { get; set; }
+        public ILogger<OwnerModule> Logger { get; set; }
 
         [Command("ApiStats")]
         [Description("Views API statistics for the current session.")]
@@ -239,8 +240,7 @@ namespace LittleBigBot.Modules
         public async Task<BaseResult> Command_ShutdownAsync()
         {
             await ReplyAsync("Noho mai rā! (Goodbye!)");
-            Logger.Fatal($"Application terminated by user {Context.Invoker} (ID {Context.Invoker.Id})");
-            LogManager.Shutdown();
+            Logger.LogCritical($"Application terminated by user {Context.Invoker} (ID {Context.Invoker.Id})");
             await Context.Client.LogoutAsync();
             await Context.Client.StopAsync();
             Context.Client.Dispose();

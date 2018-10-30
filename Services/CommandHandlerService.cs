@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Humanizer;
+using LittleBigBot.Attributes;
 using LittleBigBot.Common;
 using LittleBigBot.Entities;
 using LittleBigBot.Modules;
@@ -18,8 +19,7 @@ using Qmmands;
 
 namespace LittleBigBot.Services
 {
-    [Name("Command Handler")]
-    [Description("Receives messages and attempts to parse them into commands to be executed.")]
+    [Service("Command Handler", "Receives messages and attempts to parse them into commands to be executed.")]
     public sealed class CommandHandlerService : BaseService
     {
         public const string UnknownCommandReaction = "❓";

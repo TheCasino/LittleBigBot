@@ -106,7 +106,7 @@ namespace LittleBigBot.Modules
 
         private static string FormatCommandShort(Command command)
         {
-            return Format.Code(command.Aliases.FirstOrDefault() ?? "[Error]");
+            return Format.Code(command.FullAliases.FirstOrDefault() ?? "[Error]");
         }
 
         [Command("Module", "ModuleInfo", "MInfo", "M")]

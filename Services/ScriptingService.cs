@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using LittleBigBot.Attributes;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
@@ -12,8 +13,7 @@ using Qmmands;
 
 namespace LittleBigBot.Services
 {
-    [Name("Scripting")]
-    [Description("Allows .NET Core/Roslyn API scripting.")]
+    [Service("Scripting", "Allows .NET Core/Roslyn API scripting.")]
     public sealed class ScriptingService : BaseService
     {
         public static readonly List<string> Imports = new List<string>

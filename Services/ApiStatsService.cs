@@ -3,24 +3,51 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using LittleBigBot.Attributes;
+using Microsoft.Extensions.DependencyInjection;
 using Qmmands;
 
 namespace LittleBigBot.Services
 {
-    [Name("API Stats")]
-    [Description("Provides statistical data about API requests and errors that have occurred in this shard.")]
+    [Service("API Stats", "Provides statistical data about API requests and errors that have occurred in this shard.")]
     public sealed class ApiStatsService : BaseService
     {
         public ApiStatsService(DiscordSocketClient client)
         {
-            client.MessageReceived += HandleMessageReceivedAsync;
-            client.MessageUpdated += HandleMessageUpdatedAsync;
-            client.MessageDeleted += HandleMessageDeletedAsync;
-            client.LatencyUpdated += HandleHeartbeatAsync;
-            client.GuildAvailable += HandleGuildAvailableAsync;
-            client.GuildUnavailable += HandleGuildUnavailableAsync;
+            _client = client;
         }
 
+        public override Task InitializeAsync()
+        {
+            _client.MessageReceived += HandleMessageReceivedAsync;
+            _client.MessageUpdated += HandleMessageUpdatedAsync;
+            _client.MessageDeleted += HandleMessageDeletedAsync;
+            _client.LatencyUpdated += HandleHeartbeatAsync;
+            _client.GuildAvailable += HandleGuildAvailableAsync;
+            _client.GuildUnavailable += HandleGuildUnavailableAsync;
+            return Task.CompletedTask;
+        }
+
+        public override Task DeinitializeAsync()
+        {
+            _client.MessageReceived -= HandleMessageReceivedAsync;
+            _client.MessageUpdated -= HandleMessageUpdatedAsync;
+            _client.MessageDeleted -= HandleMessageDeletedAsync;
+            _client.LatencyUpdated -= HandleHeartbeatAsync;
+            _client.GuildAvailable -= HandleGuildAvailableAsync;
+            _client.GuildUnavailable -= HandleGuildUnavailableAsync;
+
+            MessageCreate = 0;
+            MessageUpdate = 0;
+            MessageDelete = 0;
+            Heartbeats = 0;
+            HeartbeatsList.Clear();
+            GuildMadeAvailable = 0;
+            GuildMadeUnavailable = 0;
+            return Task.CompletedTask;
+        }
+
+        private readonly DiscordSocketClient _client;
         public int MessageCreate { get; private set; }
         public int MessageUpdate { get; private set; }
         public int MessageDelete { get; private set; }

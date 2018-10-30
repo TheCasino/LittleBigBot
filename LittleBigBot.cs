@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using LittleBigBot.Attributes;
 using LittleBigBot.Common;
 using LittleBigBot.Entities;
 using LittleBigBot.Services;
@@ -27,22 +28,19 @@ namespace LittleBigBot
 
         private readonly LittleBigBotConfig _appConfig;
         private readonly DiscordSocketClient _client;
-        private readonly CommandHandlerService _commandHandler;
         private readonly ILogger _discordLogger;
 
         private readonly ILogger<LittleBigBot> _logger;
-        private readonly SpotifyService _spotify;
+        private readonly IServiceProvider _services;
 
         public LittleBigBot()
         {
-            var services = ConfigureServices(new ServiceCollection());
+            _services = ConfigureServices(new ServiceCollection());
 
-            _client = services.GetRequiredService<DiscordSocketClient>();
-            _commandHandler = services.GetRequiredService<CommandHandlerService>();
-            _appConfig = services.GetRequiredService<IOptions<LittleBigBotConfig>>().Value;
-            _logger = services.GetRequiredService<ILogger<LittleBigBot>>();
-            _discordLogger = services.GetRequiredService<ILoggerFactory>().CreateLogger("Discord");
-            _spotify = services.GetRequiredService<SpotifyService>();
+            _client = _services.GetRequiredService<DiscordSocketClient>();
+            _appConfig = _services.GetRequiredService<IOptions<LittleBigBotConfig>>().Value;
+            _logger = _services.GetRequiredService<ILogger<LittleBigBot>>();
+            _discordLogger = _services.GetRequiredService<ILoggerFactory>().CreateLogger("Discord");
         }
 
         public static Color DefaultEmbedColour => new Color(0xFFDBF4);
@@ -50,15 +48,18 @@ namespace LittleBigBot
         private IServiceProvider ConfigureServices(IServiceCollection rootCollection)
         {
             var configuration = new ConfigurationBuilder().AddIniFile(ConfigurationFileLocation, false, true).Build();
-            var webclient = new WebClient();
-            webclient.Headers.Add("User-Agent", "LittleBigBot");
 
             var baseServiceType = typeof(BaseService);
             var serviceTypes = Assembly.GetEntryAssembly().GetTypes().Where(a =>
-                baseServiceType.IsAssignableFrom(a) && a.GetCustomAttribute<DontAutoAddAttribute>() == null &&
-                !a.IsAbstract);
+                baseServiceType.IsAssignableFrom(a) && a.GetCustomAttribute<ServiceAttribute>() != null &&
+                !a.IsAbstract).ToList();
 
-            foreach (var service in serviceTypes) rootCollection.AddSingleton(service);
+            foreach (var service in serviceTypes)
+            {
+                var serviceAttribute = service.GetCustomAttribute<ServiceAttribute>();
+                rootCollection.Add(ServiceDescriptor.Describe(service, service,
+                    serviceAttribute?.Lifetime ?? ServiceLifetime.Singleton));
+            }
 
             return rootCollection
                 .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
@@ -74,21 +75,16 @@ namespace LittleBigBot
                     IgnoreExtraArguments = true,
                     CooldownBucketKeyGenerator = new LittleBigBotCooldownBucketKeyGenerator()
                 }))
-                .AddSingleton(new SpotifyService(new ClientCredentialsAuth
-                {
-                    ClientId = configuration.GetSection("Spotify")["ClientId"],
-                    ClientSecret = configuration.GetSection("Spotify")["ClientSecret"],
-                    Scope = Scope.None
-                }, new SpotifyWebAPI
-                {
-                    UseAuth = true
-                }))
-                .AddLogging(log => { log.AddProvider(new LittleBigLoggingProvider()); })
+                .AddLogging(log => { log.AddLittleBig(); })
                 .AddTransient<Random>()
-                .AddSingleton(webclient)
-                .AddSingleton(new GitHubClient(new ProductHeaderValue(configuration.GetSection("GitHub")["Username"]),
-                    new InMemoryCredentialStore(new Credentials(configuration.GetSection("GitHub")["Token"]))))
-                .AddSingleton(configuration)
+                .AddTransient(a => new WebClient
+                    {Headers = new WebHeaderCollection {[HttpRequestHeader.UserAgent] = nameof(LittleBigBot)}})
+                .AddSingleton(services =>
+                {
+                    var options = services.GetRequiredService<IOptions<LittleBigBotConfig>>().Value.GitHub;
+                    return new GitHubClient(new ProductHeaderValue(options.Username),
+                        new InMemoryCredentialStore(new Credentials(options.Token)));
+                })
                 .AddSingleton(this)
                 .Configure<LittleBigBotConfig>(configuration.Bind)
                 .BuildServiceProvider();
@@ -97,9 +93,16 @@ namespace LittleBigBot
         public async Task StartAsync()
         {
             _logger.LogInformation("LittleBigBot client starting up!");
+            
+            var serviceTypes = Assembly.GetEntryAssembly().GetTypes().Where(a =>
+                typeof(BaseService).IsAssignableFrom(a) && a.GetCustomAttribute<ServiceAttribute>() != null &&
+                !a.IsAbstract).ToList();
 
-            await _commandHandler.InitializeAsync().ConfigureAwait(false);
-            await _spotify.EnsureAuthenticatedAsync().ConfigureAwait(false);
+            foreach (var startupServiceType in serviceTypes)
+            {
+                if (_services.GetRequiredService(startupServiceType) is BaseService service) await service.InitializeAsync().ConfigureAwait(false);
+            } 
+            
             _client.Log += HandleLogAsync;
 
             _client.Ready += () => _client.SetGameAsync(_appConfig.LittleBigBot.PlayingStatus);

@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Net;
+using LittleBigBot.Attributes;
 using LittleBigBot.Checks;
 using LittleBigBot.Common;
 using LittleBigBot.Entities;
@@ -248,30 +249,29 @@ namespace LittleBigBot.Modules
             return NoResponse();
         }
 
-        [Group("Services")]
+        [Name("Service Management")]
+        [Group("Services", "Service")]
         [Description("Provides commands to enable, disable, and reload LittleBigBot services.")]
         public class ServicesSubmodule : LittleBigBotModuleBase
         {
             public IServiceProvider Services { get; set; }
 
-            public BaseService FindService(string name)
+            public (BaseService Service, ServiceAttribute Descriptor) FindService(string name)
             {
                 var matchingTypes = Assembly.GetEntryAssembly().GetTypes().Where(a =>
                 {
-                    if (typeof(BaseService).IsAssignableFrom(a) && !a.IsAbstract)
-                    {
-                        var serviceName = a.Name;
-                        var nameAttribute = a.GetCustomAttribute<NameAttribute>();
-                        if (nameAttribute != null) serviceName = nameAttribute.Name;
-                        return serviceName.Equals(name, StringComparison.OrdinalIgnoreCase);
-                    }
+                    if (!typeof(BaseService).IsAssignableFrom(a) || a.IsAbstract) return false;
+                    var serviceName = a.Name;
+                    var nameAttribute = a.GetCustomAttribute<ServiceAttribute>();
+                    if (nameAttribute != null) serviceName = nameAttribute.Name;
+                    return serviceName.Equals(name, StringComparison.OrdinalIgnoreCase);
+                }).Select(a => (a, a.GetCustomAttribute<ServiceAttribute>())).ToList();
 
-                    return false;
-                }).ToList();
+                if (matchingTypes.Any())
+                    return (Services.GetRequiredService(matchingTypes.First().a) as BaseService,
+                        matchingTypes.First().Item2);
 
-                if (matchingTypes.Any()) return Services.GetRequiredService(matchingTypes.First()) as BaseService;
-
-                return null;
+                return (null, null);
             }
 
             [Command]
@@ -280,17 +280,34 @@ namespace LittleBigBot.Modules
                 string name)
             {
                 var service = FindService(name);
-                if (service == null)
+                if (service.Descriptor == null || service.Service == null)
                     return Task.FromResult<BaseResult>(NotFound($"Cannot find a service called ``{name}``."));
-                var type = service.GetType();
-                var serviceName = type.GetCustomAttribute<NameAttribute>()?.Name ?? type.Name;
-                var serviceDescription = type.GetCustomAttribute<DescriptionAttribute>()?.Description ?? "None.";
+                var type = service.Service.GetType();
 
                 return Task.FromResult<BaseResult>(Ok(a =>
                 {
-                    a.WithAuthor($"Service: {serviceName}", Context.Bot.GetEffectiveAvatarUrl());
-                    a.WithDescription(serviceDescription);
+                    a.WithAuthor($"Service: {service.Descriptor.Name}", Context.Bot.GetEffectiveAvatarUrl());
+                    a.WithDescription(service.Descriptor.Description);
+                    a.AddField("Lifetime", service.Descriptor.Lifetime, true);
                     a.WithFooter($"LittleBigBot internal ID: {type.FullName}");
+                }));
+            }
+
+            [Command("List")]
+            public Task<BaseResult> ListServicesAsync()
+            {
+                var matchingTypes = Assembly.GetEntryAssembly().GetTypes()
+                    .Where(a => typeof(BaseService).IsAssignableFrom(a) && !a.IsAbstract).Select(service => service.GetCustomAttribute<ServiceAttribute>()).ToList();
+
+                return Task.FromResult<BaseResult>(Ok(a =>
+                {
+                    a.WithAuthor("Service List");
+                    a.WithDescription(string.Join(Environment.NewLine, matchingTypes.Select(type => $"- **{type.Name}**: {type.Description}")));
+                    a.WithFooter(footer =>
+                    {
+                        footer.IconUrl = Context.Bot.GetEffectiveAvatarUrl();
+                        footer.Text = $"{matchingTypes.Count} LittleBigBot services loaded.";
+                    });
                 }));
             }
 
@@ -301,11 +318,11 @@ namespace LittleBigBot.Modules
             {
                 var service = FindService(name);
 
-                if (service == null) return NotFound($"Cannot find a service called ``{name}``.");
+                if (service.Service == null) return NotFound($"Cannot find a service called ``{name}``.");
 
-                await service.ReloadAsync().ConfigureAwait(false);
+                await service.Service.ReloadAsync().ConfigureAwait(false);
 
-                return Ok($"Reloaded service ``{service.GetType().Name}``.");
+                return Ok($"Reloaded service ``{service.Descriptor.Name}``.");
             }
         }
     }

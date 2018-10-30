@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
+using LittleBigBot.Attributes;
 using LittleBigBot.Entities;
 using Qmmands;
 
 namespace LittleBigBot.Services
 {
-    [Name("Spoilers")]
-    [Description("Adds spoiler-creating functionality.")]
+    [Service("Spoilers", "Adds spoiler-creating functionality.")]
     public sealed class SpoilerService : BaseService
     {
         private readonly DiscordSocketClient _client;

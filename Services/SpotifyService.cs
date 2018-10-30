@@ -15,7 +15,7 @@ namespace LittleBigBot.Services
     {
         public SpotifyService(IOptions<LittleBigBotConfig> config)
         {
-            Api = new SpotifyWebAPI { UseAuth = true };
+            Api = new SpotifyWebAPI {UseAuth = true};
             Credentials = new ClientCredentialsAuth
             {
                 ClientId = config.Value.Spotify.ClientId,
@@ -27,7 +27,7 @@ namespace LittleBigBot.Services
         public Token CurrentToken { get; private set; }
         public ClientCredentialsAuth Credentials { get; }
         public SpotifyWebAPI Api { get; }
-        
+
         public async Task<T> RequestAsync<T>(Func<SpotifyWebAPI, Task<T>> actor)
         {
             await EnsureAuthenticatedAsync().ConfigureAwait(false);

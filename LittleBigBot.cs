@@ -90,16 +90,15 @@ namespace LittleBigBot
         public async Task StartAsync()
         {
             _logger.LogInformation("LittleBigBot client starting up!");
-            
+
             var serviceTypes = Assembly.GetEntryAssembly().GetTypes().Where(a =>
                 typeof(BaseService).IsAssignableFrom(a) && a.GetCustomAttribute<ServiceAttribute>() != null &&
                 !a.IsAbstract).ToList();
 
             foreach (var startupServiceType in serviceTypes)
-            {
-                if (_services.GetRequiredService(startupServiceType) is BaseService service) await service.InitializeAsync().ConfigureAwait(false);
-            } 
-            
+                if (_services.GetRequiredService(startupServiceType) is BaseService service)
+                    await service.InitializeAsync().ConfigureAwait(false);
+
             _client.Log += HandleLogAsync;
 
             _client.Ready += () => _client.SetGameAsync(_appConfig.LittleBigBot.PlayingStatus);

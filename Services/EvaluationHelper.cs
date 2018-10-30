@@ -140,10 +140,7 @@ namespace LittleBigBot.Services
                 .AppendLine("Inheritance graph for type [" + type.FullName + "]")
                 .AppendLine()
                 .AppendLine(string.Join("\n\n",
-                    parents.Select(ab =>
-                    {
-                        return index++ + ") " + string.Join(" -> ", ab.Select(b => $"[{FormatType(b)}]"));
-                    })))
+                    parents.Select(ab => { return index++ + ") " + string.Join(" -> ", ab.Select(b => $"[{FormatType(b)}]")); })))
                 .AppendLine()
                 .AppendLine(string.Join(" -> ",
                     parents.Where(a => a.Any(b => !b.IsInterface))

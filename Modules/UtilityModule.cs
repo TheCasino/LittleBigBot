@@ -138,10 +138,7 @@ namespace LittleBigBot.Modules
         [Remarks(
             "This command is difficult and unwieldly to use, because timezone data changes depending on the host platform for the bot.")]
         public Task<BaseResult> Command_GetTimeAsync(
-            [Name("Timezone")]
-            [Description("The timezone to view time data for.")]
-            [DefaultValueDescription("The bot will show you a list of all timezones available on the system.")]
-            [Remainder]
+            [Name("Timezone")] [Description("The timezone to view time data for.")] [DefaultValueDescription("The bot will show you a list of all timezones available on the system.")] [Remainder]
             string timezone)
         {
             timezone = timezone.Replace(" ", "_").Replace("UTC", "GMT").Replace("US", "America")

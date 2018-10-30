@@ -10,10 +10,21 @@ namespace LittleBigBot.Services
     [Service("API Stats", "Provides statistical data about API requests and errors that have occurred in this shard.")]
     public sealed class ApiStatsService : BaseService
     {
+        private readonly DiscordSocketClient _client;
+
         public ApiStatsService(DiscordSocketClient client)
         {
             _client = client;
         }
+
+        public int MessageCreate { get; private set; }
+        public int MessageUpdate { get; private set; }
+        public int MessageDelete { get; private set; }
+        public int Heartbeats { get; private set; }
+        public List<int> HeartbeatsList { get; } = new List<int>();
+        public double? AverageHeartbeat => HeartbeatsList.Any() ? new double?(HeartbeatsList.Average()) : null;
+        public int GuildMadeAvailable { get; private set; }
+        public int GuildMadeUnavailable { get; private set; }
 
         public override Task InitializeAsync()
         {
@@ -44,16 +55,6 @@ namespace LittleBigBot.Services
             GuildMadeUnavailable = 0;
             return Task.CompletedTask;
         }
-
-        private readonly DiscordSocketClient _client;
-        public int MessageCreate { get; private set; }
-        public int MessageUpdate { get; private set; }
-        public int MessageDelete { get; private set; }
-        public int Heartbeats { get; private set; }
-        public List<int> HeartbeatsList { get; } = new List<int>();
-        public double? AverageHeartbeat => HeartbeatsList.Any() ? new double?(HeartbeatsList.Average()) : null;
-        public int GuildMadeAvailable { get; private set; }
-        public int GuildMadeUnavailable { get; private set; }
 
         private Task HandleGuildUnavailableAsync(SocketGuild arg)
         {

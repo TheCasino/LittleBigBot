@@ -35,10 +35,7 @@ namespace LittleBigBot.Modules
         [Description("Searches the Spotify database for a song.")]
         [RunMode(RunMode.Parallel)]
         public async Task<BaseResult> Command_TrackAsync(
-            [Name("Track Name")]
-            [Description("The track to search for.")]
-            [Remainder]
-            [DefaultValueDescription("The track that you're currently listening to.")]
+            [Name("Track Name")] [Description("The track to search for.")] [Remainder] [DefaultValueDescription("The track that you're currently listening to.")]
             string trackQuery = null)
         {
             FullTrack track;
@@ -93,10 +90,7 @@ namespace LittleBigBot.Modules
         [Thumbnail("https://i.imgur.com/d7HQlA9.png")]
         [RunMode(RunMode.Parallel)]
         public async Task<BaseResult> Command_GetSpotifyDataAsync(
-            [Name("User")]
-            [Description("The user to get Spotify data for.")]
-            [DefaultValueDescription("The user who invoked this command.")]
-            [Remainder]
+            [Name("User")] [Description("The user to get Spotify data for.")] [DefaultValueDescription("The user who invoked this command.")] [Remainder]
             SocketUser user = null)
         {
             user = user ?? Context.Invoker;
@@ -151,10 +145,7 @@ namespace LittleBigBot.Modules
         [Description("Searches the Spotify database for an album.")]
         [RunMode(RunMode.Parallel)]
         public async Task<BaseResult> Command_SearchAlbumAsync(
-            [Name("Album Name")]
-            [Description("The album name to search for.")]
-            [Remainder]
-            [DefaultValueDescription("The album of the track you're currently listening to.")]
+            [Name("Album Name")] [Description("The album name to search for.")] [Remainder] [DefaultValueDescription("The album of the track you're currently listening to.")]
             string albumQuery = null)
         {
             FullAlbum album;

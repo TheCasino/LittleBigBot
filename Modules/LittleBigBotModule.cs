@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -149,9 +149,7 @@ namespace LittleBigBot.Modules
         [Description("Shows a list of a user's current guild-level permissions.")]
         [RequireDiscordContext(DiscordContextType.Server)]
         public Task<BaseResult> Command_ShowPermissionsAsync(
-            [Name("Target")]
-            [Description("The user to get permissions for.")]
-            [DefaultValueDescription("The user who invoked this command.")]
+            [Name("Target")] [Description("The user to get permissions for.")] [DefaultValueDescription("The user who invoked this command.")]
             SocketGuildUser user = null)
         {
             user = user ?? Context.InvokerMember; // Get the user (or the bot, if none specified)

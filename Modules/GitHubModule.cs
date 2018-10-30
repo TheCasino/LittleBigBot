@@ -121,9 +121,7 @@ namespace LittleBigBot.Modules
         [Description("Views all updates on the GH repo, or gets a commit by ID.")]
         [Cooldown(1, 3, CooldownMeasure.Seconds, CooldownType.User)]
         public async Task<BaseResult> Command_GetUpdateAsync([Name("Repo")] [Description("The repository to use.")]
-            string repo = GitHubRepoOwner + "/" + GitHubRepoName, [Name("Commit ID")]
-            [Description("The ID of the commit to get.")]
-            [DefaultValueDescription("Views the last three commits.")]
+            string repo = GitHubRepoOwner + "/" + GitHubRepoName, [Name("Commit ID")] [Description("The ID of the commit to get.")] [DefaultValueDescription("Views the last three commits.")]
             string updateId = null)
         {
             var repoParts = repo.Split("/");

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Discord;
 using Qmmands;
 
@@ -13,5 +14,10 @@ namespace LittleBigBot.Results
 
         public string Content { get; }
         public EmbedBuilder[] Embeds { get; }
+
+        public static implicit operator Task<BaseResult>(BaseResult res)
+        {
+            return Task.FromResult(res);
+        }
     }
 }

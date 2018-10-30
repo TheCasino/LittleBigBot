@@ -31,8 +31,7 @@ namespace LittleBigBot.Modules
             SocketGuildUser target,
             [Name("Ban Reason")] [Description("The audit log reason for the ban.")] [DefaultValueDescription("None")]
             string reason = null,
-            [Name("Prune Day Count")]
-            [Description("The amount of days going back that messages sent from this user will be removed.")]
+            [Name("Prune Day Count")] [Description("The amount of days going back that messages sent from this user will be removed.")]
             int pruneDays = 0)
         {
             if (target.Id == Context.Invoker.Id) return BadRequest("I can't ban you!");

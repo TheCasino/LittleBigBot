@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -33,9 +33,7 @@ namespace LittleBigBot.Modules
         [Command("OTP", "Ship")]
         [Description("Ships two random members of this server/DM.")]
         public Task<BaseResult> Command_OtpAsync(
-            [ParameterArrayOptional]
-            [Name("Blocked Users")]
-            [Description("Users who will be skipped in the random selection.")]
+            [ParameterArrayOptional] [Name("Blocked Users")] [Description("Users who will be skipped in the random selection.")]
             params SocketUser[] users)
         {
             if (Context.IsPrivate) return Result(Ok($":heart: I ship **you** x **me**, {Context.Invoker.Username}! :heart:"));
@@ -65,8 +63,7 @@ namespace LittleBigBot.Modules
         [Remarks("This command also supports complex dice types, like `d20+d18+4`.")]
         [Description("Rolls a dice of the supplied size.")]
         public Task<BaseResult> Command_DiceRollAsync(
-            [Name("Dice")]
-            [Description("The dice configuration to use. It can be simple, like `6`, or complex, like `d20+d18+4`.")]
+            [Name("Dice")] [Description("The dice configuration to use. It can be simple, like `6`, or complex, like `d20+d18+4`.")]
             string dice = "6", [Name("Number of Dice")] [Description("The number of dice to roll.")]
             int numberOfDice = 1)
         {

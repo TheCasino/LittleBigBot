@@ -32,7 +32,7 @@ namespace LittleBigBot.Modules
 
         [Command("GHUser", "GitHubUser")]
         [RunMode(RunMode.Parallel)]
-        [Cooldown(1, 3, CooldownMeasure.Seconds, CooldownType.User)]
+        [LBBCooldown(1, 3, CooldownMeasure.Seconds, CooldownType.User)]
         public async Task<BaseResult> Command_GetGHUserAsync(
             [Name("Username")] [Description("The username of the user to view.")]
             string username)
@@ -71,7 +71,7 @@ namespace LittleBigBot.Modules
         [Command("Repo", "Repository", "ViewRepo", "ViewRepository", "GH", "GitHub")]
         [RunMode(RunMode.Parallel)]
         [Description("Views a GitHub repository.")]
-        [Cooldown(1, 3, CooldownMeasure.Seconds, CooldownType.User)]
+        [LBBCooldown(1, 3, CooldownMeasure.Seconds, CooldownType.User)]
         public async Task<BaseResult> Command_GetGitHubRepoAsync(
             [Name("Repo ID")] [Description("The repo ID of the repository to view.")]
             string repoLink = GitHubRepoOwner + "/" + GitHubRepoName)
@@ -119,7 +119,7 @@ namespace LittleBigBot.Modules
         [Command("Updates", "GetUpdate", "ViewUpdate", "ViewUpdates", "Update")]
         [RunMode(RunMode.Parallel)]
         [Description("Views all updates on the GH repo, or gets a commit by ID.")]
-        [Cooldown(1, 3, CooldownMeasure.Seconds, CooldownType.User)]
+        [LBBCooldown(1, 3, CooldownMeasure.Seconds, CooldownType.User)]
         public async Task<BaseResult> Command_GetUpdateAsync([Name("Repo")] [Description("The repository to use.")]
             string repo = GitHubRepoOwner + "/" + GitHubRepoName, [Name("Commit ID")] [Description("The ID of the commit to get.")] [DefaultValueDescription("Views the last three commits.")]
             string updateId = null)

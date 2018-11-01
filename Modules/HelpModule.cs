@@ -22,7 +22,7 @@ using Qmmands;
 namespace LittleBigBot.Modules
 {
     [Name("Help")]
-    [Description("Contains helpful commands to help you discover your way around the LittleBigBot platform.")]
+    [Description("Contains helpful commands to help you discover your way around the {{ApplicationName}} platform.")]
     public class HelpModule : LittleBigBotModuleBase
     {
         public static readonly ImmutableDictionary<Type, (string Singular, string Multiple)> FriendlyNames =
@@ -49,6 +49,8 @@ namespace LittleBigBot.Modules
         public IOptions<LittleBigBotConfig> AppConfig { get; set; }
 
         public IServiceProvider Services { get; set; }
+        
+        public LittleBigBot BotCore { get; set; }
 
         [Command("Prefix")]
         [Description("Shows you the current prefix.")]
@@ -66,7 +68,7 @@ namespace LittleBigBot.Modules
         {
             var sb = new StringBuilder();
             sb
-                .AppendLine("**__LittleBigBot Commands__**")
+                .AppendLine($"**__{BotCore.ApplicationName} Commands__**")
                 .AppendLine("Here is a list of commands you can use.")
                 .AppendLine(
                     $"You can use `{AppConfig.Value.LittleBigBot.Prefix}help <command name>` to see help on a specific command, or `{AppConfig.Value.LittleBigBot.Prefix}module <module name>` to see help on a specific module.")
@@ -110,7 +112,7 @@ namespace LittleBigBot.Modules
         }
 
         [Command("Module", "ModuleInfo", "MInfo", "M")]
-        [Description("Displays information about a LittleBigBot module.")]
+        [Description("Displays information about a {{ApplicationName}} module.")]
         [Remarks("You can use the 'Help <command>' command for more information about a specific command.")]
         public Task<BaseResult> Command_GetModuleInfoAsync([Remainder] string query)
         {
@@ -167,7 +169,7 @@ namespace LittleBigBot.Modules
         }
 
         [Command("Help", "CommandInfo", "CInfo", "C")]
-        [Description("Displays information about a LittleBigBot command.")]
+        [Description("Displays information about a {{ApplicationName}} command.")]
         [Remarks("You can use the 'Module' command for more information about a specific module.")]
         public Task<BaseResult> Command_GetCommandInfoAsync([Remainder] string query)
         {

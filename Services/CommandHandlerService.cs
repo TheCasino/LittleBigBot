@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Schema;
 using Discord;
 using Discord.WebSocket;
 using Humanizer;
@@ -13,16 +14,19 @@ using LittleBigBot.Entities;
 using LittleBigBot.Modules;
 using LittleBigBot.Parsers;
 using LittleBigBot.Results;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Octokit;
 using Qmmands;
+using Emoji = Discord.Emoji;
 
 namespace LittleBigBot.Services
 {
-    [Service("Command Handler", "Receives messages and attempts to parse them into commands to be executed.")]
+    [Service("Command Handler", "Receives messages and attempts to parse them into commands to be executed.", autoInit: false)]
     public sealed class CommandHandlerService : BaseService
     {
-        public const string UnknownCommandReaction = "❓";
+        public static Emoji UnknownCommandReaction = new Emoji("❓");
 
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commandService;
@@ -34,15 +38,18 @@ namespace LittleBigBot.Services
 
         private readonly ILogger<CommandHandlerService> _logger;
 
+        private readonly LittleBigBot _botCore;
         private readonly IServiceProvider _services;
         private readonly DiscordUserTypeParser<SocketUser> _userParser = new DiscordUserTypeParser<SocketUser>();
 
         public int CommandFailures;
         public int CommandSuccesses;
 
+        private const string ApplicationNameToken = "{{ApplicationName}}";
+
         public CommandHandlerService(DiscordSocketClient client, CommandService commandService,
             IOptions<LittleBigBotConfig> config,
-            IServiceProvider services, ILogger<CommandHandlerService> logger, ILoggerFactory loggerFactory)
+            IServiceProvider services, ILogger<CommandHandlerService> logger, ILoggerFactory loggerFactory, LittleBigBot bot)
         {
             _client = client;
             _commandService = commandService;
@@ -50,21 +57,48 @@ namespace LittleBigBot.Services
             _services = services;
             _logger = logger;
             _commandsTracking = loggerFactory.CreateLogger("CommandsTracking");
+            _botCore = bot;
         }
 
         public override async Task InitializeAsync()
         {
-            _client.MessageReceived += HandleMessageAsync;
+            _commandService.AddTypeParser(_guildUserParser);
+            _commandService.AddTypeParser(_userParser);
+           
+            _commandService.ModuleBuilding += ParseStringTokensAsync;
             _client.MessageUpdated += HandleMessageUpdateAsync;
             _commandService.CommandErrored += HandleCommandErrorAsync;
             _commandService.CommandExecuted += HandleCommandExecutedAsync;
-
-            _commandService.AddTypeParser(_guildUserParser);
-            _commandService.AddTypeParser(_userParser);
-
+            
             var modulesLoaded = await _commandService.AddModulesAsync(Assembly.GetEntryAssembly());
+            _client.MessageReceived += HandleMessageAsync;
+            
             _logger.LogInformation(
                 $"{modulesLoaded.Count} total modules loaded | {modulesLoaded.Sum(a => a.Commands.Count)} total commands loaded | 2 type parsers loaded");
+        }
+
+        private Task ParseStringTokensAsync(ModuleBuilder arg)
+        {
+            string ReplaceOperation(string input)
+            {
+                return input != null && input.Contains(ApplicationNameToken) ? input.Replace(ApplicationNameToken, _botCore.ApplicationName) : input;
+            }
+            
+            arg.Description = ReplaceOperation(arg.Description);
+            arg.Remarks = ReplaceOperation(arg.Remarks);
+            arg.Name = ReplaceOperation(arg.Name);
+
+            foreach (var command in arg.Commands)
+            {
+                var newAliases = command.Aliases.Select(ReplaceOperation).ToList();
+                command.Aliases.Clear();
+                command.AddAliases(newAliases);
+
+                command.WithDescription(ReplaceOperation(command.Description));
+                command.WithRemarks(ReplaceOperation(command.Remarks));
+            }
+
+            return Task.CompletedTask;
         }
 
         public override async Task DeinitializeAsync()
@@ -191,8 +225,8 @@ namespace LittleBigBot.Services
             if (!(incomingMessage is SocketUserMessage message) || incomingMessage.Author is SocketWebhookUser)
                 return; // Ignore web-hooks or system messages
 
-            if (incomingMessage.Author.IsBot && incomingMessage.Author.Id != _client.CurrentUser.Id) return;
-            // Ignore bots (except ourselves)
+            if (incomingMessage.Author.IsBot) return;
+            // Ignore bots
 
             var argPos = 0;
 
@@ -214,7 +248,7 @@ namespace LittleBigBot.Services
                 switch (result)
                 {
                     case CommandNotFoundResult _:
-                        await context.Message.AddReactionAsync(new Emoji(UnknownCommandReaction));
+                        await context.Message.AddReactionAsync(UnknownCommandReaction);
                         return;
                     case ChecksFailedResult cfr:
                         command = cfr.Command;

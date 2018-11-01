@@ -21,17 +21,24 @@ namespace LittleBigBot
 {
     public sealed class LittleBigBot
     {
-        public const string ConfigurationFileLocation = "littlebigbot.ini";
+        public const string DefaultConfigurationFileLocation = "littlebigbot.ini";
+        public const bool ReloadConfigOnChange = true;
 
         private readonly LittleBigBotConfig _appConfig;
         private readonly DiscordSocketClient _client;
         private readonly ILogger _discordLogger;
+        private readonly string _configFileLocation;
 
         private readonly ILogger<LittleBigBot> _logger;
         private readonly IServiceProvider _services;
 
-        public LittleBigBot()
+        public string ApplicationName => _applicationName ?? nameof(LittleBigBot);
+
+        private string _applicationName;
+
+        public LittleBigBot(string configFile = DefaultConfigurationFileLocation)
         {
+            _configFileLocation = configFile;
             _services = ConfigureServices(new ServiceCollection());
 
             _client = _services.GetRequiredService<DiscordSocketClient>();
@@ -44,12 +51,12 @@ namespace LittleBigBot
 
         private IServiceProvider ConfigureServices(IServiceCollection rootCollection)
         {
-            var configuration = new ConfigurationBuilder().AddIniFile(ConfigurationFileLocation, false, true).Build();
+            var configuration = new ConfigurationBuilder().AddIniFile(_configFileLocation, false, ReloadConfigOnChange).Build();
 
             var baseServiceType = typeof(BaseService);
             var serviceTypes = Assembly.GetEntryAssembly().GetTypes().Where(a =>
                 baseServiceType.IsAssignableFrom(a) && a.GetCustomAttribute<ServiceAttribute>() != null &&
-                !a.IsAbstract).ToList();
+                !a.IsAbstract && a.GetCustomAttribute<ServiceAttribute>().AutoAdd).ToList();
 
             foreach (var service in serviceTypes)
             {
@@ -96,12 +103,17 @@ namespace LittleBigBot
                 !a.IsAbstract).ToList();
 
             foreach (var startupServiceType in serviceTypes)
-                if (_services.GetRequiredService(startupServiceType) is BaseService service)
+                if (_services.GetRequiredService(startupServiceType) is BaseService service && startupServiceType.GetCustomAttribute<ServiceAttribute>().AutoInit)
                     await service.InitializeAsync().ConfigureAwait(false);
 
             _client.Log += HandleLogAsync;
 
-            _client.Ready += () => _client.SetGameAsync(_appConfig.LittleBigBot.PlayingStatus);
+            _client.Ready += async () =>
+            {
+                _applicationName = (await _client.GetApplicationInfoAsync()).Name;
+                await _services.GetRequiredService<CommandHandlerService>().InitializeAsync();
+                await _client.SetGameAsync(_appConfig.LittleBigBot.PlayingStatus);
+            };
 
             await _client.LoginAsync(TokenType.Bot, _appConfig.Discord.Token).ConfigureAwait(false);
             await _client.StartAsync().ConfigureAwait(false);

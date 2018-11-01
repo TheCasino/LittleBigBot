@@ -37,8 +37,8 @@ using Qmmands;
  */
 namespace LittleBigBot.Modules
 {
-    [Name("LittleBigBot")]
-    [Description("Provides helpful commands to help you experiment with the LittleBigBot platform.")]
+    [Name("{{ApplicationName}}")]
+    [Description("Provides helpful commands to help you experiment with the {{ApplicationName}} platform.")]
     public class LittleBigBotModule : LittleBigBotModuleBase
     {
         public IOptions<LittleBigBotConfig> AppConfig { get; set; }
@@ -54,7 +54,7 @@ namespace LittleBigBot.Modules
             return Ok($"**Uptime:** {(DateTime.Now - Process.GetCurrentProcess().StartTime).Humanize(20)}");
         }
 
-        [Command("LittleBigBot", "Meta", "Info", "WhoAreYou", "About")]
+        [Command("{{ApplicationName}}", "Meta", "Info", "WhoAreYou", "About")]
         [RunMode(RunMode.Parallel)]
         [Description("Shows some information about me.")]
         public async Task<BaseResult> Command_GetLittleBigBotInfoAsync()

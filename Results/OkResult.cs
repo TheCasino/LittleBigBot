@@ -5,12 +5,7 @@ namespace LittleBigBot.Results
 {
     public class OkResult : BaseResult
     {
-        public OkResult(string content, params EmbedBuilder[] embed) : base(content, embed.Select(e =>
-        {
-            if (e.Color == null) e.Color = LittleBigBot.DefaultEmbedColour;
-
-            return e;
-        }).ToArray())
+        public OkResult(string content, params EmbedBuilder[] embed) : base(content, embed.Select(e => e.WithColor(e.Color ?? LittleBigBot.DefaultEmbedColour)).ToArray())
         {
         }
 

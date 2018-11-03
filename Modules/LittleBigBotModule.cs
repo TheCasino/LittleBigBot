@@ -46,6 +46,7 @@ namespace LittleBigBot.Modules
         public GitHubClient GHClient { get; set; }
         public IServiceProvider Services { get; set; }
         public ScriptingService Scripting { get; set; }
+        public LittleBigBot BotCore { get; set; }
 
         [Command("Uptime")]
         [Description("Displays the time that this bot process has been running.")]
@@ -70,7 +71,7 @@ namespace LittleBigBot.Modules
             var commits =
                 await GHClient.Repository.Commit.GetAll(GitHubModule.GitHubRepoOwner, GitHubModule.GitHubRepoName);
 
-            response.Author.Name = "Information about LittleBigBot";
+            response.Author.Name = $"Information about {BotCore.ApplicationName}";
 
             response
                 .AddField("Owner", app.Owner, true)

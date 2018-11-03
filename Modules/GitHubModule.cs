@@ -24,7 +24,7 @@ namespace LittleBigBot.Modules
     public class GitHubModule : LittleBigBotModuleBase
     {
         public const string GitHubRepoName = "LittleBigBot";
-        public const string GitHubRepoOwner = "littlebigtragedy";
+        public const string GitHubRepoOwner = "popstars";
 
         public IOptions<LittleBigBotConfig> AppConfig { get; set; }
         public CommandService CommandService { get; set; }

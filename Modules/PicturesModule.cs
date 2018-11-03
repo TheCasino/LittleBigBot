@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using LittleBigBot.Checks;
 using LittleBigBot.Entities;
@@ -14,7 +15,7 @@ namespace LittleBigBot.Modules
         private const string BowsetteApi = "https://lewd.bowsette.pictures/api/request";
         private const string CatApi = "http://aws.random.cat/meow";
 
-        public WebClient HttpApi { get; set; }
+        public HttpClient HttpApi { get; set; }
 
         [Command("Bowsette")]
         [Description("Pictures from lewd.bowsette.pictures.")]
@@ -22,7 +23,7 @@ namespace LittleBigBot.Modules
         [RequireNsfw]
         public async Task<CommandResult> Command_GetBowsettePictureAsync()
         {
-            var url = JToken.Parse(await HttpApi.DownloadStringTaskAsync(BowsetteApi)).Value<string>("url");
+            var url = JToken.Parse(await HttpApi.GetStringAsync(BowsetteApi)).Value<string>("url");
 
             return ImageEmbed("Here's your bowsette image, pervert!", url);
         }
@@ -31,7 +32,7 @@ namespace LittleBigBot.Modules
         [Description("Meow.")]
         public async Task<CommandResult> Command_GetCatPictureAsync()
         {
-            var url = JToken.Parse(await HttpApi.DownloadStringTaskAsync(CatApi)).Value<string>("file");
+            var url = JToken.Parse(await HttpApi.GetStringAsync(CatApi)).Value<string>("file");
 
             return ImageEmbed("Meow~!", url);
         }

@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
@@ -65,6 +66,9 @@ namespace LittleBigBot
                     serviceAttribute?.Lifetime ?? ServiceLifetime.Singleton));
             }
 
+            var httpClient = new HttpClient();
+            httpClient.DefaultRequestHeaders.Add("User-Agent", nameof(LittleBigBot));
+
             return rootCollection
                 .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
                 {
@@ -81,8 +85,7 @@ namespace LittleBigBot
                 }))
                 .AddLogging(log => { log.AddLittleBig(); })
                 .AddTransient<Random>()
-                .AddTransient(a => new WebClient
-                    {Headers = new WebHeaderCollection {[HttpRequestHeader.UserAgent] = nameof(LittleBigBot)}})
+                .AddTransient(a => httpClient)
                 .AddSingleton(services =>
                 {
                     var options = services.GetRequiredService<IOptions<LittleBigBotConfig>>().Value.GitHub;

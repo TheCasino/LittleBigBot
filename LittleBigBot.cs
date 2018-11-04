@@ -85,7 +85,7 @@ namespace LittleBigBot
                 }))
                 .AddLogging(log => { log.AddLittleBig(); })
                 .AddTransient<Random>()
-                .AddTransient(a => httpClient)
+                .AddSingleton(httpClient)
                 .AddSingleton(services =>
                 {
                     var options = services.GetRequiredService<IOptions<LittleBigBotConfig>>().Value.GitHub;
